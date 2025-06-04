@@ -1,0 +1,65 @@
+import requests
+import os
+from typing import Optional
+
+SEC_BASE = "https://data.sec.gov"
+
+# Set your user agent: SEC requires you provide a contact email
+HEADERS = {
+    "User-Agent": "GPT-Trade-Agent (your-email@example.com)"
+}
+
+def cik_to_10digit(cik: str) -> str:
+    """Normalize CIK to 10 digit string."""
+    cik = cik.strip().lstrip('0')
+    return f"{int(cik):010d}"
+
+
+def get_submissions(cik: str) -> dict:
+    """Fetch submission data for a given CIK."""
+    cik10 = cik_to_10digit(cik)
+    url = f"{SEC_BASE}/submissions/CIK{cik10}.json"
+    resp = requests.get(url, headers=HEADERS)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def fetch_latest_10k(cik: str, download_dir: str = "10k") -> Optional[str]:
+    """Fetch the latest 10-K filing for the company and save it.
+
+    Returns path to saved file or None if not found.
+    """
+    data = get_submissions(cik)
+    filings = data.get("filings", {}).get("recent", {})
+    forms = filings.get("form", [])
+    accession_numbers = filings.get("accessionNumber", [])
+    primary_docs = filings.get("primaryDocument", [])
+
+    for form, accession, doc in zip(forms, accession_numbers, primary_docs):
+        if form == "10-K":
+            # Build URL
+            accession_no_dashless = accession.replace('-', '')
+            url = (
+                f"https://www.sec.gov/Archives/edgar/data/"
+                f"{int(cik):d}/{accession_no_dashless}/{doc}"
+            )
+            os.makedirs(download_dir, exist_ok=True)
+            local_path = os.path.join(download_dir, doc)
+            resp = requests.get(url, headers=HEADERS)
+            resp.raise_for_status()
+            with open(local_path, 'wb') as f:
+                f.write(resp.content)
+            return local_path
+    return None
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python edgar_fetcher.py <CIK>")
+        sys.exit(1)
+    cik = sys.argv[1]
+    path = fetch_latest_10k(cik)
+    if path:
+        print(f"Saved latest 10-K to {path}")
+    else:
+        print("No 10-K filing found.")
