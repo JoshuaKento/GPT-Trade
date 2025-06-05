@@ -1,6 +1,6 @@
 # EDGAR 10-K Fetcher
 
-This repository provides a simple Python module to download the latest 10‑K filing from the SEC EDGAR system.
+This repository provides simple Python utilities for working with the SEC EDGAR system.  It includes a script to download the latest 10‑K filing and another to list the files available for that filing.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ This repository provides a simple Python module to download the latest 10‑K fi
 Install dependencies:
 
 ```bash
-pip install requests
+pip install requests beautifulsoup4
 ```
 
 ## Usage
@@ -22,6 +22,14 @@ python edgar_fetcher.py <CIK>
 ```
 
 The latest 10‑K document will be saved in the `10k/` directory. Replace `<CIK>` with a valid CIK number (e.g., Apple Inc. is `0000320193`).
+
+To list the files available in the latest 10‑K filing:
+
+```bash
+python edgar_files.py <CIK>
+```
+
+This prints each file name along with its description, form type, and size.
 
 ## Example
 
