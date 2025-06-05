@@ -48,3 +48,13 @@ python edgar_fetcher.py 0000320193
 ```
 
 This command downloads the most recent 10‑K for Apple and stores it locally.
+
+## Monitoring and S3 Upload
+
+Use `edgar_monitor.py` to check for new filings and upload their documents to an S3 bucket.
+
+```bash
+python edgar_monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/] [--state state.json]
+```
+
+The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
