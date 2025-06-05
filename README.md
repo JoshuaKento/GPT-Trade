@@ -1,6 +1,6 @@
 # EDGAR 10-K Fetcher
 
-This repository provides simple Python utilities for working with the SEC EDGAR system.  It includes a script to download the latest 10‑K filing and another to list the files available for that filing.
+This repository provides simple Python utilities for working with the SEC EDGAR system.  It includes a script to download the latest 10‑K filing and another to list the files available for that filing.  A third helper retrieves the master list of company CIKs and names.
 
 ## Requirements
 
@@ -30,6 +30,15 @@ python edgar_files.py <CIK>
 ```
 
 This prints each file name along with its description, form type, and size.
+
+To download a list of all company CIKs and names:
+
+```bash
+python edgar_companies.py > companies.txt
+```
+
+The script outputs each CIK and company name on a single line, which can be
+redirected to a file for later reference.
 
 ## Example
 
