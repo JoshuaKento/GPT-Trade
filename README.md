@@ -28,8 +28,9 @@ To list the files available in the latest 10‑K filing:
 ```bash
 python edgar_files.py <CIK>
 ```
-
 This prints each file name along with its description, form type, and size.
+
+Use `--json-out <path>` to write the list to a JSON file instead of printing it.
 
 To download a list of all company CIKs and names:
 

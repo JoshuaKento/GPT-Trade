@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
+import json
 
 from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS
 
@@ -60,14 +61,28 @@ def list_latest_10k_files(cik: str) -> List[Dict[str, str]]:
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python edgar_files.py <CIK>")
-        sys.exit(1)
-    cik = sys.argv[1]
-    files = list_latest_10k_files(cik)
-    if not files:
-        print("No filing files found.")
-    else:
-        for f in files:
-            print(f["document"], f["description"], f["type"], f["size"])
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="List files in the latest 10-K filing for a company"
+    )
+    parser.add_argument("cik", help="Company CIK")
+    parser.add_argument(
+        "--json-out",
+        metavar="PATH",
+        help="Optional path to write the file list as JSON",
+    )
+    args = parser.parse_args()
+
+    files = list_latest_10k_files(args.cik)
+
+    if args.json_out:
+        with open(args.json_out, "w") as fp:
+            json.dump(files, fp, indent=2)
+
+    if not args.json_out:
+        if not files:
+            print("No filing files found.")
+        else:
+            for f in files:
+                print(f["document"], f["description"], f["type"], f["size"])
