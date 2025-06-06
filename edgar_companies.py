@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from edgar_fetcher import HEADERS, sec_get
+from edgar_fetcher import sec_get
 
 COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 

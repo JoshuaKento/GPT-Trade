@@ -4,6 +4,8 @@ This repository provides simple Python utilities for working with the SEC EDGAR 
 
 All scripts throttle requests to roughly **six per second** to remain within the SEC rate limits.
 
+Set the environment variable `SEC_USER_AGENT` to a string containing your contact email. The SEC requires a valid User-Agent header for automated requests.
+
 ## Requirements
 
 - Python 3.11+

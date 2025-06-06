@@ -5,11 +5,12 @@ import time
 import threading
 
 SEC_BASE = "https://data.sec.gov"
+SEC_ARCHIVES = "https://www.sec.gov/Archives"
 
-# Set your user agent: SEC requires you provide a contact email
-HEADERS = {
-_rate_lock = threading.Lock()
-_MIN_INTERVAL = 1 / 6.0  # allow up to ~6 requests per second
+# Set your user agent via environment variable `SEC_USER_AGENT`.
+# A valid contact address is required by the SEC.
+USER_AGENT = os.environ.get("SEC_USER_AGENT", "GPT-Trade-Agent (your-email@example.com)")
+HEADERS = {"User-Agent": USER_AGENT}
     with _rate_lock:
         wait = _MIN_INTERVAL - (time.time() - _last_sec_request)
         if wait > 0:
@@ -17,10 +18,7 @@ _MIN_INTERVAL = 1 / 6.0  # allow up to ~6 requests per second
         _last_sec_request = time.time()
 
 
-def sec_get(url: str, **kwargs) -> requests.Response:
-    """Perform a GET request to the SEC with rate limiting."""
-    global _last_sec_request
-    wait = 0.2 - (time.time() - _last_sec_request)
+            url = f"{SEC_ARCHIVES}/edgar/data/{int(cik):d}/{accession_no_dashless}/{doc}"
     if wait > 0:
         time.sleep(wait)
     resp = requests.get(url, headers=HEADERS, **kwargs)

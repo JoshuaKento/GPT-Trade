@@ -1,17 +1,13 @@
 import json
 import os
 from typing import List, Dict, Optional, Set
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor
 
 from tqdm import tqdm
 
 import boto3
-from edgar_fetcher import sec_get
-
+from edgar_fetcher import sec_get, get_submissions, SEC_ARCHIVES
 from edgar_files import parse_file_list
-from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS
-
-SEC_ARCHIVES = "https://www.sec.gov/Archives"
 
 
 def load_state(path: str) -> Dict[str, Set[str]]:

@@ -2,9 +2,7 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 import json
 
-from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS, sec_get
-
-SEC_ARCHIVES = "https://www.sec.gov/Archives"
+from edgar_fetcher import cik_to_10digit, get_submissions, sec_get, SEC_ARCHIVES
 
 
 def get_latest_10k_accession(cik: str) -> Optional[str]:
