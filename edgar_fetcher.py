@@ -7,7 +7,7 @@ SEC_BASE = "https://data.sec.gov"
 
 # Set your user agent: SEC requires you provide a contact email
 HEADERS = {
-    "User-Agent": "GPT-Trade-Agent (your-email@example.com)"
+    "User-Agent": "GPT-Trade-Agent (JoshuaKent@enantiodromia.onmicrosoft.com)"
 }
 
 _last_sec_request = 0.0
@@ -16,7 +16,7 @@ _last_sec_request = 0.0
 def sec_get(url: str, **kwargs) -> requests.Response:
     """Perform a GET request to the SEC with rate limiting."""
     global _last_sec_request
-    wait = 1.0 - (time.time() - _last_sec_request)
+    wait = 0.2 - (time.time() - _last_sec_request)
     if wait > 0:
         time.sleep(wait)
     resp = requests.get(url, headers=HEADERS, **kwargs)
