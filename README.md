@@ -61,8 +61,19 @@ This command downloads the most recent 10‑K for Apple and stores it locally.
 Use `edgar_monitor.py` to check for new filings and upload their documents to an S3 bucket.
 
 ```bash
-python edgar_monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/] [--state state.json]
+python edgar_monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/] \
+                         [--state state.json] [--manifest manifest.json]
 ```
 
 The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
 Downloads run concurrently and a single progress bar shows overall progress across all documents while displaying the most recently handled file name.
+
+If you pass `--manifest`, the JSON file at that S3 key is read at startup,
+updated with any newly uploaded documents, and written back when the run
+finishes. This serves as a catalog of everything retrieved so far.
+
+Example:
+
+```bash
+python edgar_monitor.py 0000320193 --bucket my-bucket --manifest manifests/apple.json
+```

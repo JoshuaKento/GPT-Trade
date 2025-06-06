@@ -2,12 +2,16 @@ import json
 import os
 from typing import List, Dict, Optional, Set
 from concurrent.futures import ThreadPoolExecutor
+import threading
 
 from tqdm import tqdm
 
 import boto3
 from edgar_fetcher import sec_get, get_submissions, SEC_ARCHIVES
 from edgar_files import parse_file_list
+
+
+manifest_lock = threading.Lock()
 
 
 def load_state(path: str) -> Dict[str, Set[str]]:
@@ -22,6 +26,23 @@ def save_state(state: Dict[str, Set[str]], path: str) -> None:
     data = {cik: sorted(list(vals)) for cik, vals in state.items()}
     with open(path, "w") as fp:
         json.dump(data, fp, indent=2)
+
+
+def load_manifest(bucket: str, key: str) -> List[Dict[str, str]]:
+    """Load manifest JSON from S3 or return empty list if missing."""
+    s3 = boto3.client("s3")
+    try:
+        resp = s3.get_object(Bucket=bucket, Key=key)
+        data = resp["Body"].read()
+        return json.loads(data)
+    except Exception:
+        return []
+
+
+def save_manifest(manifest: List[Dict[str, str]], bucket: str, key: str) -> None:
+    s3 = boto3.client("s3")
+    body = json.dumps(manifest, indent=2).encode("utf-8")
+    s3.put_object(Bucket=bucket, Key=key, Body=body)
 
 
 def list_recent_filings(cik: str) -> List[Dict[str, str]]:
@@ -67,6 +88,7 @@ def download_and_upload_file(
     bucket: str,
     prefix: str,
     bar: tqdm,
+    manifest: Optional[List[Dict[str, str]]] = None,
 ) -> None:
     """Download a single document and upload it to S3."""
     cik_num = int(cik)
@@ -83,6 +105,15 @@ def download_and_upload_file(
         upload_bytes_to_s3(data, bucket, key)
     except Exception as exc:
         tqdm.write(f"Failed to upload {key} to S3: {exc}")
+    else:
+        if manifest is not None:
+            with manifest_lock:
+                manifest.append({
+                    "cik": cik,
+                    "accession": accession,
+                    "document": doc_name,
+                    "key": key,
+                })
     bar.set_postfix(file=doc_name)
     bar.update(1)
 
@@ -92,6 +123,7 @@ def monitor_cik(
     bucket: str,
     prefix: str,
     state: Dict[str, Set[str]],
+    manifest: Optional[List[Dict[str, str]]] = None,
 ) -> None:
     filings = list_recent_filings(cik)
     processed = state.setdefault(cik, set())
@@ -127,17 +159,29 @@ def monitor_cik(
                         bucket,
                         prefix,
                         bar,
+                        manifest,
                     )
             executor.shutdown(wait=True)
     for ff in filing_files:
         processed.add(ff["accession"])
 
 
-def main(ciks: List[str], bucket: str, prefix: str, state_path: str) -> None:
+def main(
+    ciks: List[str],
+    bucket: str,
+    prefix: str,
+    state_path: str,
+    manifest_key: Optional[str] = None,
+) -> None:
     state = load_state(state_path)
+    manifest: List[Dict[str, str]] = []
+    if manifest_key:
+        manifest = load_manifest(bucket, manifest_key)
     for cik in ciks:
-        monitor_cik(cik, bucket, prefix, state)
+        monitor_cik(cik, bucket, prefix, state, manifest)
     save_state(state, state_path)
+    if manifest_key:
+        save_manifest(manifest, bucket, manifest_key)
 
 
 if __name__ == "__main__":
@@ -151,6 +195,11 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", default="edgar", help="S3 key prefix")
     parser.add_argument("--state", default="edgar_state.json",
                         help="Path to state file")
+    parser.add_argument(
+        "--manifest",
+        metavar="KEY",
+        help="S3 key for JSON manifest of downloaded files",
+    )
     args = parser.parse_args()
 
-    main(args.ciks, args.bucket, args.prefix, args.state)
+    main(args.ciks, args.bucket, args.prefix, args.state, args.manifest)
