@@ -9,7 +9,8 @@ SEC_ARCHIVES = "https://www.sec.gov/Archives"
 
 # Set your user agent via environment variable `SEC_USER_AGENT`.
 # A valid contact address is required by the SEC.
-USER_AGENT = os.environ.get("SEC_USER_AGENT", "GPT-Trade-Agent (your-email@example.com)")
+USER_AGENT = os.environ.get(
+    "SEC_USER_AGENT", "GPT-Trade-Agent (your-email@example.com)")
 HEADERS = {"User-Agent": USER_AGENT}
     with _rate_lock:
         wait = _MIN_INTERVAL - (time.time() - _last_sec_request)
@@ -18,7 +19,9 @@ HEADERS = {"User-Agent": USER_AGENT}
         _last_sec_request = time.time()
 
 
+
             url = f"{SEC_ARCHIVES}/edgar/data/{int(cik):d}/{accession_no_dashless}/{doc}"
+
     if wait > 0:
         time.sleep(wait)
     resp = requests.get(url, headers=HEADERS, **kwargs)

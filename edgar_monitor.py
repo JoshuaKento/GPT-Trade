@@ -87,8 +87,6 @@ def download_and_upload_file(
     bar.update(1)
 
 
-
-
 def monitor_cik(
     cik: str,
     bucket: str,
@@ -145,11 +143,14 @@ def main(ciks: List[str], bucket: str, prefix: str, state_path: str) -> None:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Monitor EDGAR for new filings and upload to S3")
+    parser = argparse.ArgumentParser(
+        description="Monitor EDGAR for new filings and upload to S3")
     parser.add_argument("ciks", nargs='+', help="CIK codes to monitor")
-    parser.add_argument("--bucket", required=True, help="Destination S3 bucket")
+    parser.add_argument("--bucket", required=True,
+                        help="Destination S3 bucket")
     parser.add_argument("--prefix", default="edgar", help="S3 key prefix")
-    parser.add_argument("--state", default="edgar_state.json", help="Path to state file")
+    parser.add_argument("--state", default="edgar_state.json",
+                        help="Path to state file")
     args = parser.parse_args()
 
     main(args.ciks, args.bucket, args.prefix, args.state)
