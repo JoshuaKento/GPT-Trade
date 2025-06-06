@@ -2,7 +2,7 @@
 
 This repository provides simple Python utilities for working with the SEC EDGAR system.  It includes a script to download the latest 10‑K filing and another to list the files available for that filing.  A third helper retrieves the master list of company CIKs and names.
 
-All scripts automatically pause one second between requests to comply with the SEC's rate limit guidance.
+All scripts throttle requests to roughly **six per second** to remain within the SEC rate limits.
 
 ## Requirements
 
@@ -63,4 +63,4 @@ python edgar_monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/
 ```
 
 The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
-While downloading, a progress bar indicates how many documents remain and the current file name being fetched.
+Downloads run concurrently and a single progress bar shows overall progress across all documents while displaying the most recently handled file name.

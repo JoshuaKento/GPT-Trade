@@ -2,15 +2,19 @@ import requests
 import os
 from typing import Optional
 import time
+import threading
 
 SEC_BASE = "https://data.sec.gov"
 
 # Set your user agent: SEC requires you provide a contact email
 HEADERS = {
-    "User-Agent": "GPT-Trade-Agent (JoshuaKent@enantiodromia.onmicrosoft.com)"
-}
-
-_last_sec_request = 0.0
+_rate_lock = threading.Lock()
+_MIN_INTERVAL = 1 / 6.0  # allow up to ~6 requests per second
+    with _rate_lock:
+        wait = _MIN_INTERVAL - (time.time() - _last_sec_request)
+        if wait > 0:
+            time.sleep(wait)
+        _last_sec_request = time.time()
 
 
 def sec_get(url: str, **kwargs) -> requests.Response:

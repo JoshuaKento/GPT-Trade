@@ -1,6 +1,7 @@
 import json
 import os
 from typing import List, Dict, Optional, Set
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from tqdm import tqdm
 
@@ -63,34 +64,79 @@ def upload_bytes_to_s3(data: bytes, bucket: str, key: str) -> None:
     s3.put_object(Bucket=bucket, Key=key, Body=data)
 
 
-def process_filing(cik: str, filing: Dict[str, str], bucket: str, prefix: str) -> None:
-    accession = filing["accession"]
+def download_and_upload_file(
+    cik: str,
+    accession: str,
+    doc_name: str,
+    bucket: str,
+    prefix: str,
+    bar: tqdm,
+) -> None:
+    """Download a single document and upload it to S3."""
     cik_num = int(cik)
-    acc_no_nodash = accession.replace('-', '')
-    files = get_filing_files(cik, accession)
-    with tqdm(total=len(files), unit="file", desc=f"Filing {accession}") as bar:
-        for f in files:
-            doc_name = f["document"]
-            if not doc_name:
-                bar.update(1)
-                continue
-            bar.set_postfix(file=doc_name)
-            file_url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{doc_name}"
-            data = download_file(file_url)
-            key = f"{prefix}/{cik}/{accession}/{doc_name}"
-            upload_bytes_to_s3(data, bucket, key)
-            bar.update(1)
+    acc_no_nodash = accession.replace("-", "")
+    file_url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{doc_name}"
+    try:
+        data = download_file(file_url)
+    except Exception as exc:
+        tqdm.write(f"Failed to download {file_url}: {exc}")
+        bar.update(1)
+        return
+    key = f"{prefix}/{cik}/{accession}/{doc_name}"
+    try:
+        upload_bytes_to_s3(data, bucket, key)
+    except Exception as exc:
+        tqdm.write(f"Failed to upload {key} to S3: {exc}")
+    bar.set_postfix(file=doc_name)
+    bar.update(1)
 
 
-def monitor_cik(cik: str, bucket: str, prefix: str, state: Dict[str, Set[str]]) -> None:
+
+
+def monitor_cik(
+    cik: str,
+    bucket: str,
+    prefix: str,
+    state: Dict[str, Set[str]],
+) -> None:
     filings = list_recent_filings(cik)
     processed = state.setdefault(cik, set())
+
+    # Collect file lists first to determine overall progress
+    filing_files: List[Dict[str, List[str]]] = []
+    total_files = 0
     for filing in filings:
         accession = filing["accession"]
         if accession in processed:
             continue
-        process_filing(cik, filing, bucket, prefix)
-        processed.add(accession)
+        files = get_filing_files(cik, accession)
+        doc_names = [f.get("document") for f in files if f.get("document")]
+        if not doc_names:
+            processed.add(accession)
+            continue
+        filing_files.append({"accession": accession, "docs": doc_names})
+        total_files += len(doc_names)
+
+    if total_files == 0:
+        return
+
+    with tqdm(total=total_files, unit="file", desc=f"CIK {cik}") as bar:
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            for ff in filing_files:
+                accession = ff["accession"]
+                for doc_name in ff["docs"]:
+                    executor.submit(
+                        download_and_upload_file,
+                        cik,
+                        accession,
+                        doc_name,
+                        bucket,
+                        prefix,
+                        bar,
+                    )
+            executor.shutdown(wait=True)
+    for ff in filing_files:
+        processed.add(ff["accession"])
 
 
 def main(ciks: List[str], bucket: str, prefix: str, state_path: str) -> None:
