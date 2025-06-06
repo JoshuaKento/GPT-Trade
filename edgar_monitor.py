@@ -4,7 +4,31 @@ from typing import List, Dict, Optional, Set
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover - optional dependency
+    def tqdm(*args, **kwargs):  # type: ignore
+        """Fallback when tqdm is missing; shows no progress."""
+
+        class _Dummy:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                pass
+
+            def update(self, n=1):
+                pass
+
+            def set_postfix(self, *_, **__):
+                pass
+
+        return _Dummy()
+
+    def _tqdm_write(msg: str) -> None:
+        print(msg)
+
+    tqdm.write = _tqdm_write  # type: ignore
 
 import boto3
 from edgar_fetcher import sec_get, get_submissions, SEC_ARCHIVES

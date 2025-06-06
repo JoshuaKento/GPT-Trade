@@ -12,13 +12,15 @@ Set the environment variable `SEC_USER_AGENT` to a string containing your contac
 - `requests` library
 - `beautifulsoup4`
 - `boto3`
-- `tqdm`
+- `tqdm` (optional, provides progress bars)
 
 Install dependencies:
 
 ```bash
 pip install requests beautifulsoup4 boto3 tqdm
 ```
+
+If `tqdm` is missing, progress bars are disabled but the scripts still run.
 
 ## Usage
 
