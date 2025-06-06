@@ -3,7 +3,7 @@ import os
 from typing import List, Dict, Optional, Set
 
 import boto3
-import requests
+from edgar_fetcher import sec_get
 
 from edgar_files import parse_file_list
 from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS
@@ -45,13 +45,13 @@ def get_filing_files(cik: str, accession_number: str) -> List[Dict[str, str]]:
     cik_num = int(cik)
     acc_no_nodash = accession_number.replace('-', '')
     url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{accession_number}-index.html"
-    resp = requests.get(url, headers=HEADERS)
+    resp = sec_get(url)
     resp.raise_for_status()
     return parse_file_list(resp.text)
 
 
 def download_file(url: str) -> bytes:
-    resp = requests.get(url, headers=HEADERS)
+    resp = sec_get(url)
     resp.raise_for_status()
     return resp.content
 

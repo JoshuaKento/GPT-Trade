@@ -1,6 +1,7 @@
 import requests
 import os
 from typing import Optional
+import time
 
 SEC_BASE = "https://data.sec.gov"
 
@@ -8,6 +9,19 @@ SEC_BASE = "https://data.sec.gov"
 HEADERS = {
     "User-Agent": "GPT-Trade-Agent (your-email@example.com)"
 }
+
+_last_sec_request = 0.0
+
+
+def sec_get(url: str, **kwargs) -> requests.Response:
+    """Perform a GET request to the SEC with rate limiting."""
+    global _last_sec_request
+    wait = 1.0 - (time.time() - _last_sec_request)
+    if wait > 0:
+        time.sleep(wait)
+    resp = requests.get(url, headers=HEADERS, **kwargs)
+    _last_sec_request = time.time()
+    return resp
 
 def cik_to_10digit(cik: str) -> str:
     """Normalize CIK to 10 digit string."""
@@ -19,7 +33,7 @@ def get_submissions(cik: str) -> dict:
     """Fetch submission data for a given CIK."""
     cik10 = cik_to_10digit(cik)
     url = f"{SEC_BASE}/submissions/CIK{cik10}.json"
-    resp = requests.get(url, headers=HEADERS)
+    resp = sec_get(url)
     resp.raise_for_status()
     return resp.json()
 
@@ -45,7 +59,7 @@ def fetch_latest_10k(cik: str, download_dir: str = "10k") -> Optional[str]:
             )
             os.makedirs(download_dir, exist_ok=True)
             local_path = os.path.join(download_dir, doc)
-            resp = requests.get(url, headers=HEADERS)
+            resp = sec_get(url)
             resp.raise_for_status()
             with open(local_path, 'wb') as f:
                 f.write(resp.content)

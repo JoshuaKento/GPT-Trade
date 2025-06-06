@@ -2,6 +2,8 @@
 
 This repository provides simple Python utilities for working with the SEC EDGAR system.  It includes a script to download the latest 10‑K filing and another to list the files available for that filing.  A third helper retrieves the master list of company CIKs and names.
 
+All scripts automatically pause one second between requests to comply with the SEC's rate limit guidance.
+
 ## Requirements
 
 - Python 3.11+

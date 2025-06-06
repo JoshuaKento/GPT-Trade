@@ -1,9 +1,8 @@
-import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 import json
 
-from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS
+from edgar_fetcher import cik_to_10digit, get_submissions, HEADERS, sec_get
 
 SEC_ARCHIVES = "https://www.sec.gov/Archives"
 
@@ -24,7 +23,7 @@ def get_filing_index_html(cik: str, accession_number: str) -> str:
     cik_num = int(cik)
     acc_no_nodash = accession_number.replace('-', '')
     url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{accession_number}-index.html"
-    resp = requests.get(url, headers=HEADERS)
+    resp = sec_get(url)
     resp.raise_for_status()
     return resp.text
 
