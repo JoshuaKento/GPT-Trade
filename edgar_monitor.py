@@ -2,6 +2,8 @@ import json
 import os
 from typing import List, Dict, Optional, Set
 
+from tqdm import tqdm
+
 import boto3
 from edgar_fetcher import sec_get
 
@@ -66,14 +68,18 @@ def process_filing(cik: str, filing: Dict[str, str], bucket: str, prefix: str) -
     cik_num = int(cik)
     acc_no_nodash = accession.replace('-', '')
     files = get_filing_files(cik, accession)
-    for f in files:
-        doc_name = f["document"]
-        if not doc_name:
-            continue
-        file_url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{doc_name}"
-        data = download_file(file_url)
-        key = f"{prefix}/{cik}/{accession}/{doc_name}"
-        upload_bytes_to_s3(data, bucket, key)
+    with tqdm(total=len(files), unit="file", desc=f"Filing {accession}") as bar:
+        for f in files:
+            doc_name = f["document"]
+            if not doc_name:
+                bar.update(1)
+                continue
+            bar.set_postfix(file=doc_name)
+            file_url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{doc_name}"
+            data = download_file(file_url)
+            key = f"{prefix}/{cik}/{accession}/{doc_name}"
+            upload_bytes_to_s3(data, bucket, key)
+            bar.update(1)
 
 
 def monitor_cik(cik: str, bucket: str, prefix: str, state: Dict[str, Set[str]]) -> None:

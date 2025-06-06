@@ -8,11 +8,14 @@ All scripts automatically pause one second between requests to comply with the S
 
 - Python 3.11+
 - `requests` library
+- `beautifulsoup4`
+- `boto3`
+- `tqdm`
 
 Install dependencies:
 
 ```bash
-pip install requests beautifulsoup4
+pip install requests beautifulsoup4 boto3 tqdm
 ```
 
 ## Usage
@@ -60,3 +63,4 @@ python edgar_monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/
 ```
 
 The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
+While downloading, a progress bar indicates how many documents remain and the current file name being fetched.
