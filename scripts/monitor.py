@@ -116,8 +116,12 @@ async def monitor_cik(
     prefix: str,
     state: Dict[str, set],
     manifest: List[Dict[str, str]],
+    form_types: List[str] | None,
 ) -> None:
     filings = await list_recent_filings_async(session, limiter, cik)
+    if form_types:
+        forms_set = {f.upper() for f in form_types}
+        filings = [f for f in filings if f["form"].upper() in forms_set]
     processed = state.setdefault(cik, set())
     filing_files: List[Dict[str, List[str]]] = []
     total_files = 0
@@ -167,6 +171,7 @@ async def main_async(args: argparse.Namespace) -> None:
     prefix = args.prefix or cfg.get("s3_prefix", "edgar")
     rate = int(cfg.get("rate_limit_per_sec", 6))
     workers = int(cfg.get("num_workers", 6))
+    forms = cfg.get("form_types", [])
 
     state = load_state(args.state)
     manifest: List[Dict[str, str]] = []
@@ -177,7 +182,7 @@ async def main_async(args: argparse.Namespace) -> None:
     sem = asyncio.Semaphore(workers)
     async with aiohttp.ClientSession() as session:
         for cik in args.ciks:
-            await monitor_cik(session, limiter, sem, cik, args.bucket, prefix, state, manifest)
+            await monitor_cik(session, limiter, sem, cik, args.bucket, prefix, state, manifest, forms)
 
     save_state(state, args.state)
     if args.manifest:

@@ -11,7 +11,7 @@ Set the environment variable `SEC_USER_AGENT` to a string containing your contac
 
 Optional settings can be placed in a JSON file (default `config.json`). Use the
 `--config` option in `monitor.py` to load it. Supported keys include
-`rate_limit_per_sec`, `num_workers`, and `s3_prefix`.
+`rate_limit_per_sec`, `num_workers`, `s3_prefix`, and `form_types`.
 
 Logging output defaults to INFO level; set `LOG_LEVEL=DEBUG` for verbose logs.
 
@@ -95,6 +95,17 @@ Example:
 ```bash
 python scripts/monitor.py 0000320193 --bucket my-bucket --manifest manifests/apple.json
 ```
+
+To restrict monitoring to particular filing types, add a `form_types` array to
+your configuration file. For example:
+
+```json
+{
+  "form_types": ["10-K", "10-Q", "8-K"]
+}
+```
+
+Only filings whose `form` value matches one of these entries will be downloaded.
 
 ```
  /\\_/\\

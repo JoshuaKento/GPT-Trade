@@ -8,6 +8,7 @@ _DEFAULT_CONFIG: Dict[str, Any] = {
     "rate_limit_per_sec": 6,
     "num_workers": 6,
     "s3_prefix": "edgar",
+    "form_types": [],  # empty list means all filings
 }
 
 _CONFIG: Dict[str, Any] | None = None
