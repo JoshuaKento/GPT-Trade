@@ -1,5 +1,8 @@
 import os
+import sys
 import tempfile
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from edgar.state import load_state, save_state
 
 
