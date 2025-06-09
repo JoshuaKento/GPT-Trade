@@ -57,6 +57,7 @@ async def download_and_upload_file(
         cik_num = int(cik)
         acc_no_nodash = accession.replace('-', '')
         file_url = f"{SEC_ARCHIVES}/edgar/data/{cik_num}/{acc_no_nodash}/{doc_name}"
+        logger.debug("Downloading %s", file_url)
         try:
             data = await download_file(session, file_url, limiter)
         except Exception as exc:  # pragma: no cover - network
@@ -64,6 +65,7 @@ async def download_and_upload_file(
             bar.update(1)
             return
         key = f"{prefix}/{cik}/{accession}/{doc_name}"
+        logger.debug("Uploading to s3://%s/%s", bucket, key)
         try:
             await asyncio.to_thread(upload_bytes_to_s3, data, bucket, key)
         except Exception as exc:  # pragma: no cover - network
@@ -78,6 +80,7 @@ async def download_and_upload_file(
 async def get_filing_files_async(session: aiohttp.ClientSession, limiter: RateLimiter, cik: str, accession: str) -> List[Dict[str, str]]:
     acc_no_nodash = accession.replace('-', '')
     url = f"{SEC_ARCHIVES}/edgar/data/{int(cik):d}/{acc_no_nodash}/{accession}-index.html"
+    logger.debug("Fetching file list for %s %s", cik, accession)
     try:
         data = await download_file(session, url, limiter)
     except Exception as exc:  # pragma: no cover - network
@@ -89,6 +92,7 @@ async def get_filing_files_async(session: aiohttp.ClientSession, limiter: RateLi
 async def list_recent_filings_async(session: aiohttp.ClientSession, limiter: RateLimiter, cik: str) -> List[Dict[str, str]]:
     cik10 = cik_to_10digit(cik)
     url = f"https://data.sec.gov/submissions/CIK{cik10}.json"
+    logger.debug("Fetching submissions for %s", cik)
     try:
         await limiter.acquire()
         async with session.get(url, headers=HEADERS) as resp:
@@ -118,26 +122,35 @@ async def monitor_cik(
     manifest: List[Dict[str, str]],
     form_types: List[str] | None,
 ) -> None:
+    logger.info("Checking CIK %s", cik)
     filings = await list_recent_filings_async(session, limiter, cik)
+    logger.info("Retrieved %d filings for %s", len(filings), cik)
     if form_types:
         forms_set = {f.upper() for f in form_types}
         filings = [f for f in filings if f["form"].upper() in forms_set]
+        logger.info("%d filings remain after filtering", len(filings))
     processed = state.setdefault(cik, set())
     filing_files: List[Dict[str, List[str]]] = []
     total_files = 0
     for filing in filings:
         accession = filing["accession"]
         if accession in processed:
+            logger.info("Skipping already processed %s", accession)
             continue
+        logger.info("Processing filing %s", accession)
         files = await get_filing_files_async(session, limiter, cik, accession)
+        logger.info("Found %d documents in %s", len(files), accession)
         doc_names = [f.get("document") for f in files if f.get("document")]
         if not doc_names:
+            logger.warning("No documents found for %s", accession)
             processed.add(accession)
             continue
         filing_files.append({"accession": accession, "docs": doc_names})
         total_files += len(doc_names)
     if total_files == 0:
+        logger.info("Nothing new for %s", cik)
         return
+    logger.info("Downloading %d files for %s", total_files, cik)
     with tqdm(total=total_files, unit="file", desc=f"CIK {cik}") as bar:
         tasks = []
         for ff in filing_files:
@@ -162,6 +175,7 @@ async def monitor_cik(
         await asyncio.gather(*tasks)
     for ff in filing_files:
         processed.add(ff["accession"])
+    logger.info("Finished CIK %s", cik)
 
 
 async def main_async(args: argparse.Namespace) -> None:
@@ -172,6 +186,13 @@ async def main_async(args: argparse.Namespace) -> None:
     rate = int(cfg.get("rate_limit_per_sec", 6))
     workers = int(cfg.get("num_workers", 6))
     forms = cfg.get("form_types", [])
+    logger.info(
+        "Config: rate=%d/sec workers=%d prefix=%s forms=%s",
+        rate,
+        workers,
+        prefix,
+        ",".join(forms) if forms else "all",
+    )
 
     state = load_state(args.state)
     manifest: List[Dict[str, str]] = []
