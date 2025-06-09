@@ -1,5 +1,11 @@
 # EDGAR 10-K Fetcher
 
+```
+ /\\_/\\
+(=^.^=)
+ /     \
+```
+
 This repository provides Python utilities for working with the SEC EDGAR system.
 It now exposes a package in `edgar/` and command-line tools under `scripts/`.
 The tools can download the latest 10‑K filing, list its files, fetch the company
