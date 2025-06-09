@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgar-tools"
+version = "0.1.0"
+description = "Utilities for fetching SEC EDGAR filings"
+requires-python = ">=3.9"
+authors = [{name = "GPT-Trade"}]
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "boto3",
+    "tqdm"
+]
+
+[project.scripts]
+fetch-10k = "scripts.fetch_10k:main"
+list-files = "scripts.list_files:main"
+companies = "scripts.companies:main"
+monitor-edgar = "scripts.monitor:main"

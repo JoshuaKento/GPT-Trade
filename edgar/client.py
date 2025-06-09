@@ -4,6 +4,8 @@ import time
 import threading
 from typing import Dict
 
+from .config import get_config
+
 import requests
 
 SEC_BASE = "https://data.sec.gov"
@@ -14,7 +16,8 @@ HEADERS: Dict[str, str] = {"User-Agent": USER_AGENT}
 
 _last_sec_request = 0.0
 _rate_lock = threading.Lock()
-_MIN_INTERVAL = 1 / 6.0  # ~6 requests per second
+CONFIG = get_config()
+_MIN_INTERVAL = 1 / float(CONFIG.get("rate_limit_per_sec", 6))
 
 
 def sec_get(url: str, **kwargs) -> requests.Response:

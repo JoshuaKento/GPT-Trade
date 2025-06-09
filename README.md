@@ -9,6 +9,12 @@ All scripts throttle requests to roughly **six per second** to remain within the
 
 Set the environment variable `SEC_USER_AGENT` to a string containing your contact email. The SEC requires a valid User-Agent header for automated requests.
 
+Optional settings can be placed in a JSON file (default `config.json`). Use the
+`--config` option in `monitor.py` to load it. Supported keys include
+`rate_limit_per_sec`, `num_workers`, and `s3_prefix`.
+
+Logging output defaults to INFO level; set `LOG_LEVEL=DEBUG` for verbose logs.
+
 ## Requirements
 
 - Python 3.11+
@@ -21,6 +27,12 @@ Install dependencies:
 
 ```bash
 pip install requests beautifulsoup4 boto3 tqdm
+```
+
+Alternatively install the package and scripts with:
+
+```bash
+pip install -e .
 ```
 
 If `tqdm` is missing, progress bars are disabled but the scripts still run.
