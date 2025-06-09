@@ -5,7 +5,7 @@ It now exposes a package in `edgar/` and command-line tools under `scripts/`.
 The tools can download the latest 10‑K filing, list its files, fetch the company
 CIK list, and monitor EDGAR for new filings while uploading them to S3.
 
-All scripts throttle requests to roughly **six per second** to remain within the SEC rate limits.
+All scripts throttle requests to a configurable rate (default **six per second**) to remain within the SEC guidelines.
 
 Set the environment variable `SEC_USER_AGENT` to a string containing your contact email. The SEC requires a valid User-Agent header for automated requests.
 
@@ -21,12 +21,13 @@ Logging output defaults to INFO level; set `LOG_LEVEL=DEBUG` for verbose logs.
 - `requests` library
 - `beautifulsoup4`
 - `boto3`
+- `aiohttp`
 - `tqdm` (optional, provides progress bars)
 
 Install dependencies:
 
 ```bash
-pip install requests beautifulsoup4 boto3 tqdm
+pip install requests beautifulsoup4 boto3 aiohttp tqdm
 ```
 
 Alternatively install the package and scripts with:
@@ -83,7 +84,7 @@ python scripts/monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix pat
 ```
 
 The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
-Downloads run concurrently and a single progress bar shows overall progress across all documents while displaying the most recently handled file name.
+Downloads use `aiohttp` with an asynchronous rate limiter so multiple files are fetched in parallel while respecting the configured requests-per-second limit. A single progress bar shows overall progress across all documents and displays the most recently handled file name.
 
 If you pass `--manifest`, the JSON file at that S3 key is read at startup,
 updated with any newly uploaded documents, and written back when the run
