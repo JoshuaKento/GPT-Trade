@@ -1,0 +1,6 @@
+{
+  "rate_limit_per_sec": 6,
+  "num_workers": 6,
+  "s3_prefix": "apple",
+  "form_types": ["10-K", "10-Q", "8-K"]
+}

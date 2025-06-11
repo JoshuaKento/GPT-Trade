@@ -107,6 +107,16 @@ your configuration file. For example:
 
 Only filings whose `form` value matches one of these entries will be downloaded.
 
+Example configuration and manifest files for Apple (CIK `0000320193`) are
+provided under the `examples/` directory:
+
+```bash
+python scripts/monitor.py 0000320193 --bucket my-bucket \
+       --config examples/apple_config.json \
+       --manifest examples/apple_manifest.json
+```
+
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
