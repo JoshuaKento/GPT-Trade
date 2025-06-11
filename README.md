@@ -93,7 +93,7 @@ finishes. This serves as a catalog of everything retrieved so far.
 Example:
 
 ```bash
-python scripts/monitor.py 0000320193 --bucket my-bucket --manifest manifests/apple.json
+python scripts/monitor.py 0000320193 --bucket my-bucket --manifest manifests/apple_manifest.json
 ```
 
 To restrict monitoring to particular filing types, add a `form_types` array to
@@ -107,13 +107,12 @@ your configuration file. For example:
 
 Only filings whose `form` value matches one of these entries will be downloaded.
 
-Example configuration and manifest files for Apple (CIK `0000320193`) are
-provided under the `examples/` directory:
+Sample configuration and manifest files for Apple (CIK `0000320193`) are provided under the `config/` and `manifests/` directories:
 
 ```bash
 python scripts/monitor.py 0000320193 --bucket my-bucket \
-       --config examples/apple_config.json \
-       --manifest examples/apple_manifest.json
+       --config config/apple_config.json \
+       --manifest manifests/apple_manifest.json
 ```
 
 
