@@ -107,6 +107,10 @@ your configuration file. For example:
 
 Only filings whose `form` value matches one of these entries will be downloaded.
 
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
 ```
  /\\_/\\
 (=^.^=)

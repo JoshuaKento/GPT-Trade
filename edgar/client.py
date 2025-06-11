@@ -16,15 +16,15 @@ HEADERS: Dict[str, str] = {"User-Agent": USER_AGENT}
 
 _last_sec_request = 0.0
 _rate_lock = threading.Lock()
-CONFIG = get_config()
-_MIN_INTERVAL = 1 / float(CONFIG.get("rate_limit_per_sec", 6))
 
 
 def sec_get(url: str, **kwargs) -> requests.Response:
     """GET request to SEC with simple global rate limiting."""
+    cfg = get_config()
+    interval = 1 / float(cfg.get("rate_limit_per_sec", 6))
     global _last_sec_request
     with _rate_lock:
-        wait = _MIN_INTERVAL - (time.time() - _last_sec_request)
+        wait = interval - (time.time() - _last_sec_request)
         if wait > 0:
             time.sleep(wait)
         _last_sec_request = time.time()
