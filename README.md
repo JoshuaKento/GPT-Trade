@@ -27,17 +27,34 @@ Logging output defaults to INFO level; set `LOG_LEVEL=DEBUG` for verbose logs.
 - `tqdm` (optional, provides progress bars)
 
 
-Install dependencies:
+Install dependencies with:
 
 ```bash
-pip install requests beautifulsoup4 boto3 aiohttp tqdm
+pip install -r requirements.txt
 ```
 
-Alternatively install the package and scripts with:
+Alternatively install the package and scripts directly:
 
 ```bash
 pip install -e .
 ```
+
+### Using pyenv-virtualenv
+
+If you manage Python versions with `pyenv` and `pyenv-virtualenv`, create a
+dedicated environment for this project:
+
+```bash
+pyenv install 3.11.12       # once, if not already available
+pyenv virtualenv 3.11.12 gpt-trade
+pyenv local gpt-trade       # writes `.python-version`
+pip install -r requirements.txt
+```
+
+This repository includes a `.python-version` file so the virtual environment is
+activated automatically when you enter the directory.
+For a step-by-step guide in Japanese, see
+[PYENV_SETUP.md](PYENV_SETUP.md).
 
 ## Usage
 
