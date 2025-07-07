@@ -1,0 +1,7 @@
+requests
+beautifulsoup4
+boto3
+aiohttp
+tqdm
+pytest
+
