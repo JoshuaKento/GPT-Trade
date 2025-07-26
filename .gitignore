@@ -1,2 +1,13 @@
 __pycache__/
 *.pyc
+
+CLAUDEmd/
+*.md
+*.txt
+
+.claude/
+
+.pytest_cache/
+
+
+

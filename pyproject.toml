@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-fetch-10k = "scripts.fetch_10k:main"
-list-files = "scripts.list_files:main"
+fetch-10k = "scripts.fetch_10k_new:main"
+list-files = "scripts.list_files_new:main"
 companies = "scripts.companies:main"
-monitor-edgar = "scripts.monitor:main"
+monitor-edgar = "scripts.monitor_new:main"
