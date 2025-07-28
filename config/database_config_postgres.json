@@ -1,0 +1,31 @@
+{
+  "database_type": "postgresql",
+  "postgres_host": "localhost",
+  "postgres_port": 5432,
+  "postgres_database": "gpt_trader",
+  "postgres_username": "postgres",
+  "postgres_password": "your_password_here",
+  "postgres_schema": "public",
+  
+  "pool_size": 20,
+  "max_overflow": 30,
+  "pool_timeout": 30.0,
+  "pool_recycle": 3600,
+  "pool_pre_ping": true,
+  
+  "connect_retries": 3,
+  "connect_retry_delay": 1.0,
+  "connect_retry_backoff": 2.0,
+  
+  "isolation_level": "READ_COMMITTED",
+  "autocommit": false,
+  
+  "echo": false,
+  "echo_pool": false,
+  
+  "migration_directory": "migrations",
+  "migration_table": "schema_migrations",
+  
+  "health_check_interval": 60,
+  "health_check_timeout": 5.0
+}
