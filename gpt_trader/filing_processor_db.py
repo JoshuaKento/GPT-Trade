@@ -16,6 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from edgar.filing_processor import FilingProcessor as BaseFilingProcessor
 from edgar.filing_processor import AsyncFilingProcessor as BaseAsyncFilingProcessor
+from edgar.filing_processor import AdaptiveRateLimiter, ProcessingResult as EdgarProcessingResult
 from edgar.client_new import EdgarClient, ClientConfig
 from edgar.s3_manager import S3Manager
 
@@ -410,7 +411,12 @@ class BatchFilingProcessor:
         client_config = ClientConfig(
             rate_limit_per_sec=self.config.edgar.rate_limit_per_sec,
             user_agent=self.config.edgar.user_agent,
-            num_workers=self.config.edgar.num_workers
+            # Use agents' performance optimizations
+            adaptive_rate_limiting=True,
+            pool_connections=50,
+            pool_maxsize=100,
+            socket_options=True,
+            keepalive_timeout=30
         )
         return EdgarClient(client_config)
     
