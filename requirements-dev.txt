@@ -1,0 +1,93 @@
+# Development and Testing Dependencies for EDGAR Tools
+
+# Core testing framework
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1
+pytest-asyncio>=0.21.1
+pytest-timeout>=2.1.0
+pytest-xdist>=3.3.1
+
+# Code quality and linting
+black>=23.7.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.5.0
+pylint>=2.17.0
+
+# Security scanning
+bandit>=1.7.5
+safety>=2.3.0
+
+# Documentation
+sphinx>=7.1.0
+sphinx-rtd-theme>=1.3.0
+sphinx-autodoc-typehints>=1.24.0
+
+# Type checking helpers
+types-requests>=2.31.0
+types-beautifulsoup4>=4.12.0
+
+# Testing utilities
+factory-boy>=3.3.0
+faker>=19.3.0
+responses>=0.23.0
+httpx>=0.24.0
+aioresponses>=0.7.4
+
+# Performance testing
+pytest-benchmark>=4.0.0
+
+# Test data and fixtures
+pytest-factoryboy>=2.5.1
+pytest-datadir>=1.4.1
+
+# Coverage reporting
+coverage[toml]>=7.2.0
+
+# Development tools
+pre-commit>=3.3.0
+tox>=4.6.0
+
+# Debugging
+pdb++>=0.10.3
+ipdb>=0.13.13
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Additional async testing
+pytest-trio>=0.8.0
+
+# Mocking AWS services for S3 tests
+moto[s3]>=4.2.0
+
+# HTTP mocking
+requests-mock>=1.11.0
+
+# Dependency analysis
+pipdeptree>=2.13.0
+
+# Code complexity analysis
+radon>=6.0.1
+
+# Import sorting (used by pre-commit)
+reorder-python-imports>=3.10.0
+
+# Markdown linting
+markdownlint-cli2>=0.8.1
+
+# YAML validation
+yamllint>=1.32.0
+
+# JSON validation and formatting
+jsonschema>=4.19.0
+
+# Git hooks
+gitlint>=0.19.1
+
+# License checking
+pip-licenses>=4.3.0
+
+# Requirements analysis
+pip-audit>=2.6.0

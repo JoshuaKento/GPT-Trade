@@ -1,0 +1,51 @@
+# Database Environment Variables Configuration
+# Copy this file to .env and update the values as needed
+
+# Database Type and Connection
+DATABASE_TYPE=sqlite
+DATABASE_URL=sqlite:///data/gpt_trader.db
+
+# For PostgreSQL, use:
+# DATABASE_TYPE=postgresql
+# DATABASE_URL=postgresql://user:password@localhost:5432/gpt_trader
+
+# SQLite Settings
+SQLITE_PATH=data/gpt_trader.db
+SQLITE_TIMEOUT=30.0
+SQLITE_CHECK_SAME_THREAD=false
+
+# PostgreSQL Settings
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DATABASE=gpt_trader
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password_here
+POSTGRES_SCHEMA=public
+
+# Connection Pooling
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=20
+DB_POOL_TIMEOUT=30.0
+DB_POOL_RECYCLE=3600
+DB_POOL_PRE_PING=true
+
+# Retry Settings
+DB_CONNECT_RETRIES=3
+DB_CONNECT_RETRY_DELAY=1.0
+DB_CONNECT_RETRY_BACKOFF=2.0
+
+# Transaction Settings
+DB_ISOLATION_LEVEL=READ_COMMITTED
+DB_AUTOCOMMIT=false
+
+# Logging (for debugging only - set to false in production)
+DB_ECHO=false
+DB_ECHO_POOL=false
+
+# Migration Settings
+DB_MIGRATION_DIR=migrations
+DB_MIGRATION_TABLE=schema_migrations
+
+# Health Check Settings
+DB_HEALTH_CHECK_INTERVAL=60
+DB_HEALTH_CHECK_TIMEOUT=5.0

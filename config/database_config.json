@@ -1,0 +1,28 @@
+{
+  "database_type": "sqlite",
+  "sqlite_path": "data/gpt_trader.db",
+  "sqlite_timeout": 30.0,
+  "sqlite_check_same_thread": false,
+  
+  "pool_size": 10,
+  "max_overflow": 20,
+  "pool_timeout": 30.0,
+  "pool_recycle": 3600,
+  "pool_pre_ping": true,
+  
+  "connect_retries": 3,
+  "connect_retry_delay": 1.0,
+  "connect_retry_backoff": 2.0,
+  
+  "isolation_level": "READ_COMMITTED",
+  "autocommit": false,
+  
+  "echo": false,
+  "echo_pool": false,
+  
+  "migration_directory": "migrations",
+  "migration_table": "schema_migrations",
+  
+  "health_check_interval": 60,
+  "health_check_timeout": 5.0
+}

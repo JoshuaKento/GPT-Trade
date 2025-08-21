@@ -1,146 +1,290 @@
-# EDGAR 10-K Fetcher
+# EDGAR Tools - Modern SEC Filing Toolkit
 
+A comprehensive Python toolkit for downloading and monitoring SEC EDGAR filings with modern architecture, enhanced error handling, and production-ready features.
 
-This repository provides Python utilities for working with the SEC EDGAR system.
-It now exposes a package in `edgar/` and command-line tools under `scripts/`.
-The tools can download the latest 10‑K filing, list its files, fetch the company
-CIK list, and monitor EDGAR for new filings while uploading them to S3.
+## ✨ Features
 
-All scripts throttle requests to a configurable rate (default **six per second**) to remain within the SEC guidelines.
+- **🏗️ Modern Architecture**: Dependency injection, type safety, and modular design
+- **⚡ High Performance**: Connection pooling, async processing, and resource management
+- **🛡️ Robust Error Handling**: Comprehensive validation and specific exception types
+- **🔄 Real-time Monitoring**: Track new filings with S3 upload and manifest management
+- **📊 Multiple Output Formats**: JSON, CSV, and table outputs for filing data
+- **🧪 Production Ready**: Comprehensive testing and enterprise-grade reliability
 
-Set the environment variable `SEC_USER_AGENT` to a string containing your contact email. The SEC requires a valid User-Agent header for automated requests.
+## 🚀 Quick Start
 
-Optional settings can be placed in a JSON file (default `config.json`). Use the
-`--config` option in `monitor.py` to load it. Supported keys include
-`rate_limit_per_sec`, `num_workers`, `s3_prefix`, and `form_types`.
-
-Logging output defaults to INFO level; set `LOG_LEVEL=DEBUG` for verbose logs.
-
-
-## Requirements
-
-- Python 3.11+
-- `requests` library
-- `beautifulsoup4`
-- `boto3`
-- `aiohttp`
-- `tqdm` (optional, provides progress bars)
-
-
-Install dependencies with:
+### Installation
 
 ```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-Alternatively install the package and scripts directly:
-
-```bash
+# Install as editable package (recommended)
 pip install -e .
 ```
 
-### Using pyenv-virtualenv
-
-If you manage Python versions with `pyenv` and `pyenv-virtualenv`, create a
-dedicated environment for this project:
+### Basic Usage
 
 ```bash
-pyenv install 3.11.12       # once, if not already available
-pyenv virtualenv 3.11.12 gpt-trade
-pyenv local gpt-trade       # writes `.python-version`
+# Download Apple's latest 10-K filing
+python scripts/fetch_10k_new.py 0000320193
+
+# List files in latest 10-K with JSON output
+python scripts/list_files_new.py 0000320193 --json --output files.json
+
+# Monitor for new filings with S3 upload
+python scripts/monitor_new.py 0000320193 --bucket my-bucket --async
+```
+
+## 📋 Requirements
+
+- **Python 3.11+** (managed via pyenv with `.python-version` file)
+- **Core Dependencies**: `requests`, `beautifulsoup4`, `boto3`, `aiohttp`, `tqdm`
+- **Testing**: `pytest`
+
+### Environment Setup
+
+```bash
+# Using pyenv (recommended)
+pyenv install 3.11.12
+pyenv virtualenv 3.11.12 edgar-tools
+pyenv local edgar-tools
 pip install -r requirements.txt
 ```
 
-This repository includes a `.python-version` file so the virtual environment is
-activated automatically when you enter the directory.
-For a step-by-step guide in Japanese, see
-[PYENV_SETUP.md](PYENV_SETUP.md).
+For detailed setup instructions, see [PYENV_SETUP.md](PYENV_SETUP.md).
 
-## Usage
+## 🎯 Enhanced Scripts (Recommended)
 
-Run the script with a company CIK (Central Index Key):
-
+### fetch_10k_new.py - Enhanced 10-K Fetcher
 ```bash
-python scripts/fetch_10k.py <CIK>
+# Basic usage
+python scripts/fetch_10k_new.py 0000320193
+
+# With custom directory and verbose logging
+python scripts/fetch_10k_new.py 0000320193 --dir apple_10k --verbose
+
+# Using custom configuration
+python scripts/fetch_10k_new.py 0000320193 --config myconfig.json
 ```
 
-The latest 10‑K document will be saved in the `10k/` directory. Replace `<CIK>` with a valid CIK number (e.g., Apple Inc. is `0000320193`).
-
-To list the files available in the latest 10‑K filing:
-
+### list_files_new.py - Enhanced File Lister
 ```bash
-python scripts/list_files.py <CIK>
-```
-This prints each file name along with its description, form type, and size.
+# Table output (default)
+python scripts/list_files_new.py 0000320193
 
-Use `--json-out <path>` to write the list to a JSON file instead of printing it.
+# JSON output to file
+python scripts/list_files_new.py 0000320193 --json --output files.json
 
-To download a list of all company CIKs and names:
+# CSV format
+python scripts/list_files_new.py 0000320193 --csv --output data.csv
 
-```bash
-python scripts/companies.py > companies.txt
+# Different form types
+python scripts/list_files_new.py 0000320193 --form 10-Q
 ```
 
-The script outputs each CIK and company name on a single line, which can be
-redirected to a file for later reference.
-
-## Example
-
+### monitor_new.py - Enhanced Monitoring
 ```bash
-python scripts/fetch_10k.py 0000320193
+# Basic monitoring with S3 upload
+python scripts/monitor_new.py 0000320193 --bucket my-bucket
+
+# Async processing with manifest tracking
+python scripts/monitor_new.py 0000320193 --bucket my-bucket \
+  --manifest manifests/manifest.json --async
+
+# Dry run to see what would be processed
+python scripts/monitor_new.py 0000320193 --bucket my-bucket --dry-run
+
+# Multiple CIKs with custom configuration
+python scripts/monitor_new.py 0000320193 0000789019 --bucket my-bucket \
+  --config config.json --async
 ```
 
-This command downloads the most recent 10‑K for Apple and stores it locally.
+## 📦 Package Usage (New Architecture)
 
-## Monitoring and S3 Upload
+### Basic Example
+```python
+from edgar import EdgarClient, ConfigManager, S3Manager
 
+# Load configuration
+config_manager = ConfigManager()
+config = config_manager.get_config()
 
-Use `scripts/monitor.py` to check for new filings and upload their documents to an S3 bucket.
-
-```bash
-python scripts/monitor.py <CIK> [<CIK> ...] --bucket <bucket-name> [--prefix path/] \
-                         [--state state.json] [--manifest manifest.json]
+# Use enhanced clients with resource management
+with EdgarClient(config) as client, S3Manager() as s3:
+    # Enhanced functionality with full error handling
+    from edgar import FilingProcessor
+    processor = FilingProcessor(client, s3)
+    
+    # Process filings with comprehensive validation
+    filings = processor.get_recent_filings("0000320193")
+    for filing in filings:
+        if filing.form == "10-K":
+            print(f"Found 10-K: {filing.accession}")
 ```
 
-The script keeps track of processed accession numbers in the specified state file and uploads each document from new filings to the given S3 bucket.
-Downloads use `aiohttp` with an asynchronous rate limiter so multiple files are fetched in parallel while respecting the configured requests-per-second limit. A single progress bar shows overall progress across all documents and displays the most recently handled file name.
+### URL Building and Validation
+```python
+from edgar.urls import URLBuilder, validate_cik
 
-If you pass `--manifest`, the JSON file at that S3 key is read at startup,
-updated with any newly uploaded documents, and written back when the run
-finishes. This serves as a catalog of everything retrieved so far.
+# Robust CIK validation
+cik = validate_cik("320193")  # Returns "0000320193"
 
-Example:
-
-```bash
-python scripts/monitor.py 0000320193 --bucket my-bucket --manifest manifests/apple_manifest.json
+# Type-safe URL construction
+submissions_url = URLBuilder.submissions_url(cik)
+filing_url = URLBuilder.filing_index_url(cik, "0000320193-23-000006")
+document_url = URLBuilder.document_url(cik, accession, "aapl-20230930.htm")
 ```
 
-To restrict monitoring to particular filing types, add a `form_types` array to
-your configuration file. For example:
+### Configuration Management
+```python
+from edgar.config_manager import ConfigManager, EdgarConfig
 
+# Type-safe configuration
+config = EdgarConfig(
+    rate_limit_per_sec=8.0,
+    num_workers=10,
+    s3_prefix="edgar-data",
+    form_types=["10-K", "10-Q"]
+)
+
+# Load from file with validation
+manager = ConfigManager()
+config = manager.load_config("config.json")
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+```bash
+# Required
+export SEC_USER_AGENT="YourApp (contact@example.com)"
+
+# Optional enhancements
+export EDGAR_RATE_LIMIT=6.0
+export EDGAR_TIMEOUT=30
+export EDGAR_MAX_RETRIES=3
+export EDGAR_S3_REGION=us-east-1
+export EDGAR_NUM_WORKERS=6
+export EDGAR_FORM_TYPES="10-K,10-Q"
+export EDGAR_LOG_LEVEL=INFO
+```
+
+### Configuration File (Enhanced)
 ```json
 {
-  "form_types": ["10-K", "10-Q", "8-K"]
+  "rate_limit_per_sec": 6.0,
+  "num_workers": 6,
+  "max_pool_connections": 50,
+  "s3_prefix": "edgar",
+  "s3_region": "us-east-1",
+  "form_types": ["10-K", "10-Q"],
+  "timeout": 30,
+  "max_retries": 3,
+  "backoff_factor": 0.5,
+  "user_agent": "MyApp (contact@example.com)",
+  "log_level": "INFO"
 }
 ```
 
-Only filings whose `form` value matches one of these entries will be downloaded.
-
-Sample configuration and manifest files for Apple (CIK `0000320193`) are provided under the `config/` and `manifests/` directories:
+## 🧪 Testing
 
 ```bash
-python scripts/monitor.py 0000320193 --bucket my-bucket \
-       --config config/apple_config.json \
-       --manifest manifests/apple_manifest.json
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test suite
+python -m pytest tests/test_refactored_components.py -v
+
+# Test enhanced functionality
+python -m pytest tests/test_refactored_components.py::TestURLValidation -v
 ```
 
+## 🏢 Enterprise Features
 
-## License
+- **🔒 Type Safety**: Complete type annotations prevent runtime errors
+- **🔄 Connection Pooling**: HTTP and S3 connections are reused for performance
+- **📊 Async Processing**: Handle multiple filings concurrently with proper backpressure
+- **🛡️ Comprehensive Validation**: CIK, accession numbers, and documents are validated
+- **📈 Resource Management**: Automatic cleanup prevents memory leaks
+- **🔍 Detailed Logging**: Structured logging with configurable levels
+- **⚡ Retry Logic**: Automatic retry with exponential backoff for network issues
+
+## 📚 Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Development guidance and architecture overview
+- **[MIGRATION.md](MIGRATION.md)** - Migration guide from legacy architecture  
+- **[Issues.md](Issues.md)** - Detailed analysis of improvements implemented
+- **[FINAL_MIGRATION_REPORT.md](FINAL_MIGRATION_REPORT.md)** - Complete migration summary
+
+## 🔄 Legacy Compatibility
+
+Legacy scripts remain available with deprecation warnings:
+```bash
+# These still work but show deprecation warnings
+python scripts/fetch_10k.py 0000320193      # Use fetch_10k_new.py instead
+python scripts/list_files.py 0000320193     # Use list_files_new.py instead
+```
+
+Legacy package functions are preserved:
+```python
+# Backward compatibility maintained
+from edgar import cik_to_10digit, fetch_latest_10k, list_recent_filings
+```
+
+## 🚨 SEC Compliance
+
+- **Rate Limiting**: Automatic throttling to SEC guidelines (6 requests/second default)
+- **User-Agent**: Required contact email in User-Agent header
+- **Respectful Access**: Built-in delays and retry logic to avoid overwhelming SEC servers
+
+## 📝 Examples
+
+### Monitor Multiple Companies
+```bash
+# Monitor Apple and Microsoft for 10-K/10-Q filings
+python scripts/monitor_new.py 0000320193 0000789019 \
+  --bucket edgar-filings \
+  --manifest manifests/tech_companies.json \
+  --config config/production.json \
+  --async
+```
+
+### Batch Processing
+```python
+from edgar import EdgarClient, FilingProcessor, ConfigManager
+
+config_manager = ConfigManager()
+config = config_manager.get_config()
+
+companies = ["0000320193", "0000789019", "0001018724"]  # Apple, Microsoft, Amazon
+
+with EdgarClient(config) as client:
+    processor = FilingProcessor(client, None)
+    
+    for cik in companies:
+        try:
+            filings = processor.get_recent_filings(cik)
+            print(f"CIK {cik}: {len(filings)} recent filings")
+        except Exception as e:
+            print(f"Error processing {cik}: {e}")
+```
+
+## 🤝 Contributing
+
+1. **Setup**: Follow the installation instructions above
+2. **Testing**: Ensure all tests pass with `python -m pytest tests/ -v`
+3. **Code Quality**: Use the new architecture classes for consistency
+4. **Documentation**: Update relevant documentation for changes
+
+## 📄 License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
+---
+
 ```
- /\\_/\\
+ /\_/\
 (=^.^=)
  /     \
 JoshuaKent

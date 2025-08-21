@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest --help)",
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(pip install:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,7 +1,27 @@
-requests
-beautifulsoup4
-boto3
-aiohttp
-tqdm
-pytest
+# Core dependencies with version pinning for security
+requests>=2.31.0,<3.0.0          # HTTP library with security fixes
+beautifulsoup4>=4.12.0,<5.0.0    # HTML/XML parser with security updates
+boto3>=1.34.0,<2.0.0              # AWS SDK with latest security patches
+aiohttp>=3.9.0,<4.0.0             # Async HTTP client with security fixes
+tqdm>=4.66.0,<5.0.0               # Progress bars
+pytest>=7.4.0,<8.0.0              # Testing framework
+
+# Database dependencies for GPT Trader
+sqlalchemy>=2.0.0,<3.0.0          # ORM and database toolkit
+psycopg2-binary>=2.9.7,<3.0.0     # PostgreSQL adapter
+alembic>=1.12.0,<2.0.0            # Database migration tool
+
+# System monitoring and performance
+psutil>=5.9.0,<6.0.0              # System and process utilities
+
+# Security-focused additional dependencies
+urllib3>=2.0.0,<3.0.0             # HTTP library with security improvements
+certifi>=2023.7.22                # Updated CA certificates
+cryptography>=41.0.0              # Cryptographic library with security fixes
+idna>=3.4                         # Internationalized domain names
+charset-normalizer>=3.2.0         # Character encoding detection
+
+# Development and security tools
+bandit>=1.7.5                     # Security linter for Python
+safety>=2.3.0                     # Security vulnerability scanner
 
