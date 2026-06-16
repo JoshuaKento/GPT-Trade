@@ -162,24 +162,44 @@ class DatabaseManager:
             db_path: Path to SQLite database file
             logger: Optional logger instance
         """
+        self._db_path = str(db_path)
         self.db_path = Path(db_path)
         self.logger = logger or logging.getLogger(__name__)
+        self._is_sqlite_uri = self._db_path.startswith("file:")
+        self._is_memory_db = (
+            self._db_path == ":memory:"
+            or (self._is_sqlite_uri and "mode=memory" in self._db_path.lower())
+        )
+        self._persistent_connection: Optional[sqlite3.Connection] = None
         
         # Create database tables
         self._create_tables()
     
-    @contextmanager
-    def get_connection(self):
-        """Get a database connection and release it after use."""
+    def _connect(self) -> sqlite3.Connection:
+        """Create and configure a SQLite connection."""
         connection = sqlite3.connect(
-            str(self.db_path),
+            self._db_path if self._is_sqlite_uri else str(self.db_path),
             check_same_thread=False,
             timeout=30.0,
+            uri=self._is_sqlite_uri,
         )
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA synchronous=NORMAL")
         connection.execute("PRAGMA cache_size=-64000")  # 64MB cache
+        return connection
+
+    @contextmanager
+    def get_connection(self):
+        """Get a database connection and release it after use."""
+        if self._is_memory_db:
+            if self._persistent_connection is None:
+                self._persistent_connection = self._connect()
+            connection = self._persistent_connection
+            should_close = False
+        else:
+            connection = self._connect()
+            should_close = True
 
         try:
             yield connection
@@ -188,7 +208,8 @@ class DatabaseManager:
             self.logger.error(f"Database operation failed: {e}")
             raise
         finally:
-            connection.close()
+            if should_close:
+                connection.close()
     
     def _create_tables(self):
         """Create database tables if they don't exist."""

@@ -74,6 +74,20 @@ class TestDatabaseManager:
             row = cursor.fetchone()
             assert row is not None
             assert row["ticker"] == "AAPL"
+
+    def test_in_memory_database_persists_between_operations(self):
+        """Test in-memory database schema persists across operations."""
+        db_manager = DatabaseManager(":memory:")
+        company = Company(cik="0000320193", ticker="AAPL", name="Apple Inc.")
+
+        assert db_manager.create_company(company) is True
+
+        with db_manager.get_connection() as conn:
+            cursor = conn.execute("SELECT ticker FROM companies WHERE cik = ?", ("0000320193",))
+            row = cursor.fetchone()
+
+        assert row is not None
+        assert row["ticker"] == "AAPL"
     
     def test_create_filing(self):
         """Test creating filing records."""
