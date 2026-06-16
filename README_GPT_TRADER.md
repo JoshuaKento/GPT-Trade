@@ -2,7 +2,7 @@
 
 A comprehensive platform for collecting, storing, and analyzing SEC EDGAR filings with advanced ETL capabilities, database persistence, and performance monitoring.
 
-## 🚀 Features
+## Features
 
 ### Phase 2 - Database & ETL Platform (v0.1)
 
@@ -22,7 +22,7 @@ A comprehensive platform for collecting, storing, and analyzing SEC EDGAR filing
 - **Progress Tracking**: Real-time monitoring and status reporting
 - **Error Recovery**: Automatic retry mechanisms and failure handling
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.9+
 - PostgreSQL 12+ (or SQLite for development)
@@ -30,7 +30,7 @@ A comprehensive platform for collecting, storing, and analyzing SEC EDGAR filing
 - 2GB+ RAM for processing 50 tickers
 - Valid email for SEC user-agent compliance
 
-## 🛠 Installation
+## Installation
 
 ### 1. Clone Repository
 ```bash
@@ -60,7 +60,7 @@ export S3_BUCKET="your-s3-bucket"
 python scripts/gpt_trader_cli.py init-db
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Create Configuration File
 ```bash
@@ -106,7 +106,7 @@ python scripts/gpt_trader_cli.py add-ticker NVDA 0000320193 --priority 1
 python scripts/gpt_trader_cli.py add-ticker TSLA 0001318605 --priority 2
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Initialize System
 ```bash
@@ -150,7 +150,7 @@ python scripts/gpt_trader_cli.py monitor
 python scripts/gpt_trader_cli.py start-scheduler
 ```
 
-## 📊 Usage Examples
+## Usage Examples
 
 ### Programmatic Usage
 
@@ -208,7 +208,7 @@ with session_scope() as session:
     print(f"{pending_count} filings pending processing")
 ```
 
-## 🔧 CLI Reference
+## CLI Reference
 
 ### Database Commands
 ```bash
@@ -237,11 +237,11 @@ gpt_trader_cli.py job-status JOB_ID           # Job details
 gpt_trader_cli.py monitor [--refresh SECONDS] # Monitoring dashboard
 ```
 
-## 📈 Performance & SLA
+## Performance & SLA
 
 ### Default SLA Targets
-- **Processing Time**: ≤ 30 minutes for 50 tickers
-- **Success Rate**: ≥ 95% of filings processed successfully
+- **Processing Time**: <= 30 minutes for 50 tickers
+- **Success Rate**: >= 95% of filings processed successfully
 - **Memory Usage**: < 2GB peak usage
 - **Error Rate**: < 10% failure rate
 
@@ -259,7 +259,7 @@ gpt_trader_cli.py monitor [--refresh SECONDS] # Monitoring dashboard
 - Database connection health
 - S3 upload success rates
 
-## 🔐 Security Features
+## Security Features
 
 - **Input Validation**: Comprehensive path traversal protection
 - **Credential Management**: Secure AWS credential handling
@@ -267,7 +267,7 @@ gpt_trader_cli.py monitor [--refresh SECONDS] # Monitoring dashboard
 - **Error Handling**: Secure error messages without data leakage
 - **Dependency Security**: Pinned versions with security scanning
 
-## 🧪 Testing
+## Testing
 
 ### Run Tests
 ```bash
@@ -288,27 +288,27 @@ pytest --cov=gpt_trader --cov-report=html
 - Performance and SLA compliance tests
 - Integration tests with test containers
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 gpt_trader/
-├── __init__.py              # Main package exports
-├── models.py                # SQLAlchemy database models
-├── database.py              # Database connection management
-├── config.py                # Configuration management
-├── filing_processor_db.py   # Database-enabled filing processor
-├── etl.py                  # ETL pipeline orchestration
-└── monitoring.py           # Performance monitoring & SLA
+|-- __init__.py              # Main package exports
+|-- models.py                # SQLAlchemy database models
+|-- database.py              # Database connection management
+|-- config.py                # Configuration management
+|-- filing_processor_db.py   # Database-enabled filing processor
+|-- etl.py                   # ETL pipeline orchestration
+`-- monitoring.py            # Performance monitoring & SLA
 
 scripts/
-└── gpt_trader_cli.py       # Command-line interface
+`-- gpt_trader_cli.py        # Command-line interface
 
 tests/
-├── test_gpt_trader_models.py # Database model tests
-└── test_gpt_trader_etl.py    # ETL pipeline tests
+|-- test_gpt_trader_models.py # Database model tests
+`-- test_gpt_trader_etl.py    # ETL pipeline tests
 ```
 
-## 🚀 Future Roadmap
+## Future Roadmap
 
 ### Phase 3 - Analytics & RAG (Month 3)
 - Vector embeddings with pgvector
@@ -322,7 +322,7 @@ tests/
 - Portfolio optimization
 - Live trading API connections
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing-feature`)
@@ -331,16 +331,16 @@ tests/
 5. Push to branch (`git push origin feature/amazing-feature`)
 6. Open Pull Request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📧 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/JoshuaKento/GPT-Trade/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/JoshuaKento/GPT-Trade/discussions)
 - **Email**: support@gpt-trader.com
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This software is for educational and research purposes only. Not financial advice. Always comply with SEC regulations and respect API rate limits.

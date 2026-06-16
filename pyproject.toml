@@ -102,7 +102,7 @@ companies = "scripts.companies:main"
 monitor-edgar = "scripts.monitor_new:main"
 
 [tool.setuptools.packages.find]
-include = ["edgar*", "scripts*"]
+include = ["edgar*", "gpt_trader*", "scripts*"]
 exclude = ["tests*", "CLAUDEmd*", "config*", "manifests*"]
 
 # Tool configurations

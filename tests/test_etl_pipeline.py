@@ -10,7 +10,10 @@ from unittest.mock import AsyncMock, Mock, patch, MagicMock, call
 import aiohttp
 import pytest
 import responses
-from moto import mock_s3
+try:
+    from moto import mock_s3
+except ImportError:
+    from moto import mock_aws as mock_s3
 import boto3
 
 from tests.test_database_models import (
