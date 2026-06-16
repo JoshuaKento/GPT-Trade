@@ -2,10 +2,9 @@
 
 import asyncio
 import concurrent.futures
-import memory_profiler
 import psutil
 import time
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from unittest.mock import Mock, patch
@@ -119,8 +118,8 @@ class PerformanceMetrics:
                     assert actual <= threshold, f"Latency {actual:.3f}s exceeds SLA {threshold}s"
 
 
-@contextmanager
-def performance_monitor():
+@asynccontextmanager
+async def performance_monitor():
     """Context manager for performance monitoring."""
     metrics = PerformanceMetrics()
     metrics.start_monitoring()
@@ -255,7 +254,7 @@ class TestSLACompliance:
     @pytest.mark.asyncio
     async def test_single_ticker_processing_time(self, performance_edgar_api):
         """Test single ticker processing meets SLA."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             ciks = ["0000320000"]  # Single company
@@ -280,7 +279,7 @@ class TestSLACompliance:
     @pytest.mark.asyncio
     async def test_fifty_tickers_sla_compliance(self, performance_edgar_api):
         """Test 50 tickers processing meets 30-minute SLA."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # All 50 companies
@@ -319,7 +318,7 @@ class TestSLACompliance:
         
         # Test with increasing data volumes
         for num_companies in [1, 5, 10, 25]:
-            with performance_monitor() as metrics:
+            async with performance_monitor() as metrics:
                 pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
                 
                 ciks = [f"000032{i:04d}" for i in range(num_companies)]
@@ -470,7 +469,7 @@ class TestThroughputRequirements:
     @pytest.mark.asyncio
     async def test_filing_discovery_throughput(self, performance_edgar_api):
         """Test filing discovery throughput."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # Large batch for throughput testing
@@ -494,7 +493,7 @@ class TestThroughputRequirements:
     @pytest.mark.asyncio
     async def test_document_download_throughput(self, performance_edgar_api):
         """Test document download throughput."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # Test downloading multiple filings
@@ -525,7 +524,7 @@ class TestStressAndLoad:
     @pytest.mark.asyncio
     async def test_high_concurrency_stress(self, performance_edgar_api):
         """Test pipeline under high concurrency load."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # High concurrency test
@@ -556,7 +555,7 @@ class TestStressAndLoad:
     @pytest.mark.asyncio
     async def test_sustained_load(self, performance_edgar_api):
         """Test pipeline under sustained load."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # Simulate sustained load for multiple batches
@@ -592,7 +591,7 @@ class TestResourceUtilization:
     @pytest.mark.asyncio
     async def test_cpu_utilization_efficiency(self, performance_edgar_api):
         """Test CPU utilization during processing."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # CPU-intensive task simulation
@@ -613,7 +612,7 @@ class TestResourceUtilization:
     @pytest.mark.asyncio
     async def test_memory_efficiency(self, performance_edgar_api):
         """Test memory usage efficiency."""
-        with performance_monitor() as metrics:
+        async with performance_monitor() as metrics:
             pipeline = PerformanceETLPipeline(performance_edgar_api, metrics)
             
             # Process data that should fit efficiently in memory

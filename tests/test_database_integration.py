@@ -9,12 +9,15 @@ import uuid
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any, Dict, Generator, List, Optional
 
-import asyncpg
 import pytest
-from moto import mock_s3
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
+
+try:
+    import asyncpg
+except ModuleNotFoundError:
+    asyncpg = None
 
 from tests.test_database_models import (
     CompanyFactory,
@@ -212,6 +215,9 @@ def test_db():
 @pytest.fixture
 def postgres_test_db():
     """Provide PostgreSQL test database container."""
+    if asyncpg is None:
+        pytest.skip("asyncpg is required for PostgreSQL integration tests")
+
     container = DatabaseTestContainer(use_real_postgres=True)
     with container.get_test_database():
         yield container

@@ -12,8 +12,10 @@ from .database import DatabaseManager, get_session
 from .models import Company, Filing, Document, ProcessingJob
 from .etl import ETLPipeline
 from .config import GPTTraderConfig
+from .filing_processor_db import BatchFilingProcessor
 
 __all__ = [
+    "BatchFilingProcessor",
     "DatabaseManager",
     "get_session", 
     "Company",

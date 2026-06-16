@@ -16,35 +16,34 @@ class OptimizedHTTPAdapter(HTTPAdapter):
     """HTTP adapter with optimized connection pooling and keep-alive settings."""
 
     def __init__(self, config: "ClientConfig", *args, **kwargs):
-        self.config = config
+        self._client_config = config
         super().__init__(*args, **kwargs)
 
-    def init_poolmanager(self, *args, **kwargs):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         """Initialize pool manager with optimized settings."""
-        kwargs.update(
-            {
-                "num_pools": self.config.pool_connections,
-                "maxsize": self.config.pool_maxsize,
-                "block": False,
-            }
-        )
+        config = self._client_config
 
-        if self.config.socket_options:
+        if config.socket_options:
             # Enable TCP keep-alive
             import socket
 
-            kwargs["socket_options"] = [
+            pool_kwargs["socket_options"] = [
                 (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
                 (
                     socket.IPPROTO_TCP,
                     socket.TCP_KEEPIDLE,
-                    self.config.keepalive_timeout,
+                    config.keepalive_timeout,
                 ),
                 (socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10),
                 (socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 6),
             ]
 
-        return super().init_poolmanager(*args, **kwargs)
+        return super().init_poolmanager(
+            config.pool_connections,
+            config.pool_maxsize,
+            block=False,
+            **pool_kwargs,
+        )
 
 
 class SyncAdaptiveRateLimiter:

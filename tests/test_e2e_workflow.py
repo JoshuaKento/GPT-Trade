@@ -11,7 +11,10 @@ from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 import boto3
-from moto import mock_s3
+try:
+    from moto import mock_s3
+except ImportError:
+    from moto import mock_aws as mock_s3
 
 from tests.test_database_models import (
     CompanyFactory,

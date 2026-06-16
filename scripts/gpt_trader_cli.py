@@ -43,13 +43,13 @@ def cmd_init_db(args):
     
     try:
         initialize_database(drop_existing=args.reset)
-        print("✅ Database initialized successfully")
+        print("[OK] Database initialized successfully")
         
         if args.reset:
-            print("⚠️  Existing data was dropped")
+            print("[WARN] Existing data was dropped")
             
     except Exception as e:
-        print(f"❌ Failed to initialize database: {e}")
+        print(f"[ERROR] Failed to initialize database: {e}")
         sys.exit(1)
 
 
@@ -61,9 +61,9 @@ def cmd_db_status(args):
     try:
         # Health check
         if health_check():
-            print("✅ Database connection: HEALTHY")
+            print("[OK] Database connection: HEALTHY")
         else:
-            print("❌ Database connection: FAILED")
+            print("[ERROR] Database connection: FAILED")
             return
         
         # Connection info
@@ -91,11 +91,21 @@ def cmd_db_status(args):
             
             print(f"\nRecent Jobs ({len(recent_jobs)}):")
             for job in recent_jobs:
-                status_emoji = "✅" if job.status == ProcessingStatus.COMPLETED else "❌" if job.status == ProcessingStatus.FAILED else "⏳"
-                print(f"  {status_emoji} {job.job_name} ({job.status}) - {job.created_at.strftime('%Y-%m-%d %H:%M')}")
+                if job.status == ProcessingStatus.COMPLETED:
+                    status_label = "[OK]"
+                elif job.status == ProcessingStatus.FAILED:
+                    status_label = "[ERROR]"
+                else:
+                    status_label = "[PENDING]"
+
+                created_at = job.created_at.strftime('%Y-%m-%d %H:%M')
+                print(
+                    f"  {status_label} {job.job_name} "
+                    f"({job.status}) - {created_at}"
+                )
                 
     except Exception as e:
-        print(f"❌ Failed to get database status: {e}")
+        print(f"[ERROR] Failed to get database status: {e}")
         sys.exit(1)
 
 
@@ -110,7 +120,7 @@ def cmd_config_show(args):
         print(json.dumps(config.to_dict(), indent=2, default=str))
         
     except Exception as e:
-        print(f"❌ Failed to load configuration: {e}")
+        print(f"[ERROR] Failed to load configuration: {e}")
         sys.exit(1)
 
 
@@ -130,11 +140,11 @@ def cmd_config_create_sample(args):
         output_file = args.output or "gpt_trader_config.json"
         config.to_file(output_file)
         
-        print(f"✅ Sample configuration created: {output_file}")
-        print(f"📝 Added {len(config.tickers)} sample tickers")
+        print(f"[OK] Sample configuration created: {output_file}")
+        print(f"[INFO] Added {len(config.tickers)} sample tickers")
         
     except Exception as e:
-        print(f"❌ Failed to create sample configuration: {e}")
+        print(f"[ERROR] Failed to create sample configuration: {e}")
         sys.exit(1)
 
 
@@ -151,10 +161,10 @@ def cmd_add_ticker(args):
         # Save configuration
         config_manager.save_config()
         
-        print(f"✅ Added ticker {args.ticker} (CIK: {args.cik}) to configuration")
+        print(f"[OK] Added ticker {args.ticker} (CIK: {args.cik}) to configuration")
         
     except Exception as e:
-        print(f"❌ Failed to add ticker: {e}")
+        print(f"[ERROR] Failed to add ticker: {e}")
         sys.exit(1)
 
 
@@ -182,15 +192,15 @@ def cmd_sync_companies(args):
         for ticker_config in config.tickers:
             try:
                 company = processor.sync_company_from_ticker_config(ticker_config)
-                print(f"✅ Synced {ticker_config.ticker} -> Company ID {company.id}")
+                print(f"[OK] Synced {ticker_config.ticker} -> Company ID {company.id}")
                 synced_count += 1
             except Exception as e:
-                print(f"❌ Failed to sync {ticker_config.ticker}: {e}")
+                print(f"[ERROR] Failed to sync {ticker_config.ticker}: {e}")
         
-        print(f"✅ Synced {synced_count} companies to database")
+        print(f"[OK] Synced {synced_count} companies to database")
         
     except Exception as e:
-        print(f"❌ Failed to sync companies: {e}")
+        print(f"[ERROR] Failed to sync companies: {e}")
         sys.exit(1)
 
 
@@ -209,14 +219,14 @@ def cmd_run_etl(args):
             # Process specific ticker
             ticker_config = config.get_ticker_by_symbol(args.ticker)
             if not ticker_config:
-                print(f"❌ Ticker {args.ticker} not found in configuration")
+                print(f"[ERROR] Ticker {args.ticker} not found in configuration")
                 sys.exit(1)
             
             print(f"Processing ticker: {args.ticker}")
             new_filings, updated_filings = batch_processor.processor.fetch_and_store_filings(
                 ticker_config, max_filings=args.max_filings
             )
-            print(f"✅ Completed {args.ticker}: {new_filings} new, {updated_filings} updated filings")
+            print(f"[OK] Completed {args.ticker}: {new_filings} new, {updated_filings} updated filings")
             
         else:
             # Process all active tickers
@@ -224,13 +234,13 @@ def cmd_run_etl(args):
                 job_name=args.job_name or f"cli_etl_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             )
             
-            print(f"✅ Batch ETL completed")
+            print("[OK] Batch ETL completed")
             print(f"Job ID: {job.id}")
             print(f"Status: {job.status}")
             print(f"Duration: {job.duration:.2f} seconds" if job.duration else "N/A")
             
     except Exception as e:
-        print(f"❌ ETL process failed: {e}")
+        print(f"[ERROR] ETL process failed: {e}")
         sys.exit(1)
 
 
@@ -245,7 +255,7 @@ def cmd_start_scheduler(args):
         scheduler = ETLScheduler(config)
         scheduler.start()
         
-        print("✅ ETL scheduler started")
+        print("[OK] ETL scheduler started")
         print("Press Ctrl+C to stop...")
         
         try:
@@ -253,12 +263,12 @@ def cmd_start_scheduler(args):
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            print("\n🛑 Stopping scheduler...")
+            print("\nStopping scheduler...")
             scheduler.stop()
-            print("✅ Scheduler stopped")
+            print("[OK] Scheduler stopped")
             
     except Exception as e:
-        print(f"❌ Failed to start scheduler: {e}")
+        print(f"[ERROR] Failed to start scheduler: {e}")
         sys.exit(1)
 
 
@@ -295,7 +305,7 @@ def cmd_list_jobs(args):
                 print(f"{job.id:<6} {job.job_name[:29]:<30} {job.status:<12} {duration_str:<10} {items_str:<8} {created_str:<16}")
                 
     except Exception as e:
-        print(f"❌ Failed to list jobs: {e}")
+        print(f"[ERROR] Failed to list jobs: {e}")
         sys.exit(1)
 
 
@@ -306,7 +316,7 @@ def cmd_job_status(args):
             job = session.query(ProcessingJob).filter(ProcessingJob.id == args.job_id).first()
             
             if not job:
-                print(f"❌ Job {args.job_id} not found")
+                print(f"[ERROR] Job {args.job_id} not found")
                 sys.exit(1)
             
             print(f"Job Details (ID: {job.id}):")
@@ -335,7 +345,7 @@ def cmd_job_status(args):
                 print(f"Parameters: {json.dumps(job.parameters, indent=2)}")
                 
     except Exception as e:
-        print(f"❌ Failed to get job status: {e}")
+        print(f"[ERROR] Failed to get job status: {e}")
         sys.exit(1)
 
 
@@ -377,8 +387,8 @@ def cmd_monitor(args):
                 
                 # SLA status
                 compliance = sla_status['compliance_status']
-                emoji = "✅" if compliance == "healthy" else "⚠️"
-                print(f"SLA Status: {emoji} {compliance.upper()} | "
+                status_label = "[OK]" if compliance == "healthy" else "[WARN]"
+                print(f"SLA Status: {status_label} {compliance.upper()} | "
                       f"Violations (24h): {sla_status['violations_24h']}")
                 
                 # Database status
@@ -391,23 +401,23 @@ def cmd_monitor(args):
                             ProcessingJob.status == ProcessingStatus.IN_PROGRESS
                         ).count()
                         
-                        print(f"Database: ✅ Connected | "
+                        print(f"Database: [OK] Connected | "
                               f"Pending Filings: {pending_filings} | "
                               f"Active Jobs: {active_jobs}")
                 else:
-                    print("Database: ❌ Disconnected")
+                    print("Database: [ERROR] Disconnected")
                 
                 print("-" * 80)
                 time.sleep(args.refresh or 5)
                 
         except KeyboardInterrupt:
-            print("\n🛑 Stopping monitoring...")
+            print("\nStopping monitoring...")
             performance_monitor.stop()
             sla_monitor.stop()
-            print("✅ Monitoring stopped")
+            print("[OK] Monitoring stopped")
             
     except Exception as e:
-        print(f"❌ Failed to start monitoring: {e}")
+        print(f"[ERROR] Failed to start monitoring: {e}")
         sys.exit(1)
 
 
@@ -511,7 +521,7 @@ Examples:
     if handler:
         handler(args)
     else:
-        print(f"❌ Unknown command: {args.command}")
+        print(f"[ERROR] Unknown command: {args.command}")
         sys.exit(1)
 
 
