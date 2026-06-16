@@ -4,7 +4,7 @@ import asyncio
 import os
 import sqlite3
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -396,7 +396,7 @@ class TestBatchFilingProcessor:
         mock_create_processor.return_value.__aexit__.return_value = None
         
         # Mock the async processing to return immediately
-        async def mock_process_batch():
+        async def mock_process_batch(*args, **kwargs):
             return BatchProcessingResult(
                 job_id=1,
                 total_ciks=1,
@@ -474,7 +474,10 @@ class TestJobOrchestrator:
         assert result is True
         
         # Test resume
-        result = self.orchestrator.resume_job(1)
+        self.mock_batch_processor.get_job_status.return_value["status"] = "paused"
+        with patch("edgar.job_orchestrator.asyncio.create_task") as mock_create_task:
+            mock_create_task.return_value = Mock()
+            result = self.orchestrator.resume_job(1)
         assert result is True
     
     def test_cancel_job(self):
@@ -619,7 +622,7 @@ class TestDuplicateDetector:
         
         # Manually update the timestamp to be old
         with self.db_manager.get_connection() as conn:
-            old_time = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0)
+            old_time = datetime.now(timezone.utc) - timedelta(hours=13)
             conn.execute("""
                 UPDATE filings SET updated_at = ? WHERE id = ?
             """, (old_time.isoformat(), filing_id))
@@ -719,7 +722,7 @@ class TestPerformanceMonitor:
         """Test generating performance reports."""
         # Create a completed job
         start_time = datetime.now(timezone.utc)
-        end_time = start_time.replace(minute=start_time.minute + 10)  # 10 minutes later
+        end_time = start_time + timedelta(minutes=10)
         
         job = ProcessingJob(
             job_name="test_job",

@@ -34,7 +34,7 @@ def fetch_latest_10k(cik: str, download_dir: str = "10k") -> Optional[str]:
     logger = logging.getLogger(__name__)
 
     try:
-        validate_cik(cik)
+        cik = validate_cik(cik)
 
         # Use new architecture
         config_manager = ConfigManager()

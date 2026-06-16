@@ -476,6 +476,7 @@ class TestAsyncFilingProcessor:
         """Test successful file download."""
         # Mock the session property to return a mock session
         mock_session = Mock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
         mock_response = AsyncMock()
         mock_response.raise_for_status = Mock()
         mock_response.read = AsyncMock(return_value=b"file content")
@@ -483,34 +484,34 @@ class TestAsyncFilingProcessor:
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
         mock_session.get.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        # Mock the session property
-        with patch.object(self.processor, "session", mock_session):
-            headers = {"User-Agent": "Test Agent (test@example.com)"}
-            url = "http://test.com/file.htm"
+        self.processor._session = mock_session
+        headers = {"User-Agent": "Test Agent (test@example.com)"}
+        url = "http://test.com/file.htm"
 
-            content = await self.processor.download_file(url, headers)
+        content = await self.processor.download_file(url, headers)
 
-            assert content == b"file content"
-            self.mock_rate_limiter.acquire.assert_called_once()
+        assert content == b"file content"
+        self.mock_rate_limiter.acquire.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_download_file_failure(self):
         """Test file download failure."""
         mock_session = Mock(spec=aiohttp.ClientSession)
+        mock_session.closed = False
         mock_response = AsyncMock()
-        mock_response.raise_for_status.side_effect = aiohttp.ClientError(
-            "Download failed"
+        mock_response.raise_for_status = Mock(
+            side_effect=aiohttp.ClientError("Download failed")
         )
 
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
         mock_session.get.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        with patch.object(self.processor, "session", mock_session):
-            headers = {"User-Agent": "Test Agent (test@example.com)"}
-            url = "http://test.com/file.htm"
+        self.processor._session = mock_session
+        headers = {"User-Agent": "Test Agent (test@example.com)"}
+        url = "http://test.com/file.htm"
 
-            with pytest.raises(aiohttp.ClientError):
-                await self.processor.download_file(url, headers)
+        with pytest.raises(aiohttp.ClientError):
+            await self.processor.download_file(url, headers)
 
     @pytest.mark.asyncio
     async def test_process_document_async_success(self):
@@ -525,10 +526,15 @@ class TestAsyncFilingProcessor:
                 headers = {"User-Agent": "Test Agent (test@example.com)"}
 
                 result = await self.processor._process_document_async(
-                    "0000320193", "acc1", "doc.htm", "bucket", "prefix", headers
+                    "0000320193",
+                    "0000320193-23-000001",
+                    "doc.htm",
+                    "bucket",
+                    "prefix",
+                    headers,
                 )
 
-                assert result == "prefix/0000320193/acc1/doc.htm"
+                assert result == "prefix/0000320193/0000320193-23-000001/doc.htm"
                 mock_thread.assert_called_once()
 
     @pytest.mark.asyncio
@@ -543,7 +549,12 @@ class TestAsyncFilingProcessor:
 
             with pytest.raises(RuntimeError) as exc_info:
                 await self.processor._process_document_async(
-                    "0000320193", "acc1", "doc.htm", "bucket", "prefix", headers
+                    "0000320193",
+                    "0000320193-23-000001",
+                    "doc.htm",
+                    "bucket",
+                    "prefix",
+                    headers,
                 )
 
             assert "Failed to process document" in str(exc_info.value)
@@ -551,7 +562,7 @@ class TestAsyncFilingProcessor:
     @pytest.mark.asyncio
     async def test_process_filing_async_success(self):
         """Test successful async filing processing."""
-        filing = FilingInfo("10-K", "acc1", "doc1.htm")
+        filing = FilingInfo("10-K", "0000320193-23-000001", "doc1.htm")
         headers = {"User-Agent": "Test"}
         semaphore = asyncio.Semaphore(1)
 
@@ -577,14 +588,14 @@ class TestAsyncFilingProcessor:
                     )
 
                     assert result.success is True
-                    assert result.accession == "0000320193-23-000106"
+                    assert result.accession == "0000320193-23-000001"
                     assert result.documents_processed == 1
                     assert result.uploaded_files == ["s3_key"]
 
     @pytest.mark.asyncio
     async def test_process_filing_async_no_documents(self):
         """Test async filing processing with no documents."""
-        filing = FilingInfo("10-K", "acc1", "doc1.htm")
+        filing = FilingInfo("10-K", "0000320193-23-000001", "doc1.htm")
         headers = {"User-Agent": "Test"}
         semaphore = asyncio.Semaphore(1)
 
@@ -606,7 +617,7 @@ class TestAsyncFilingProcessor:
     @pytest.mark.asyncio
     async def test_process_filing_async_partial_failure(self):
         """Test async filing processing with partial document failures."""
-        filing = FilingInfo("10-K", "acc1", "doc1.htm")
+        filing = FilingInfo("10-K", "0000320193-23-000001", "doc1.htm")
         headers = {"User-Agent": "Test"}
         semaphore = asyncio.Semaphore(1)
 

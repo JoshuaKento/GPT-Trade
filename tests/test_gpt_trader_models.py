@@ -358,7 +358,7 @@ class TestDatabaseManager:
     def test_database_manager_creation(self):
         """Test creating database manager."""
         config = DatabaseConfig()
-        config.url = "sqlite:///:memory:"
+        config.database_url = "sqlite:///:memory:"
         
         manager = DatabaseManager(config)
         assert manager.config == config
@@ -372,7 +372,7 @@ class TestDatabaseManager:
     def test_session_creation(self):
         """Test session creation."""
         config = DatabaseConfig()
-        config.url = "sqlite:///:memory:"
+        config.database_url = "sqlite:///:memory:"
         
         manager = DatabaseManager(config)
         session = manager.get_session()
@@ -383,7 +383,7 @@ class TestDatabaseManager:
     def test_session_scope(self):
         """Test session scope context manager."""
         config = DatabaseConfig()
-        config.url = "sqlite:///:memory:"
+        config.database_url = "sqlite:///:memory:"
         
         manager = DatabaseManager(config)
         manager.create_all_tables()
@@ -402,7 +402,7 @@ class TestDatabaseManager:
     def test_health_check(self):
         """Test database health check."""
         config = DatabaseConfig()
-        config.url = "sqlite:///:memory:"
+        config.database_url = "sqlite:///:memory:"
         
         manager = DatabaseManager(config)
         manager.create_all_tables()
@@ -412,7 +412,7 @@ class TestDatabaseManager:
     def test_connection_info(self):
         """Test getting connection information."""
         config = DatabaseConfig()
-        config.url = "sqlite:///:memory:"
+        config.database_url = "sqlite:///:memory:"
         
         manager = DatabaseManager(config)
         info = manager.get_connection_info()

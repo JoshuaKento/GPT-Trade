@@ -14,12 +14,15 @@ from gpt_trader.etl import (
 )
 from gpt_trader.config import GPTTraderConfig, TickerConfig, ETLConfig
 from gpt_trader.models import ProcessingJob, ProcessingStatus
+from edgar.config_manager import EdgarConfig
 
 
 @pytest.fixture
 def sample_config():
     """Create sample GPT Trader configuration."""
-    config = GPTTraderConfig()
+    config = GPTTraderConfig(
+        edgar=EdgarConfig(user_agent="Test Agent (test@example.com)")
+    )
     config.etl = ETLConfig(
         batch_size=10,
         max_concurrent_jobs=2,
@@ -231,6 +234,7 @@ class TestETLWorker:
         mock_job = Mock()
         mock_job.id = 123
         mock_job.job_uuid = "test-uuid-123"
+        mock_session.merge.return_value = mock_job
         
         with patch('gpt_trader.etl.ProcessingJob') as mock_job_class:
             mock_job_class.create_job.return_value = mock_job
