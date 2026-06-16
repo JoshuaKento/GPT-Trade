@@ -10,7 +10,6 @@ import sqlite3
 from contextlib import contextmanager
 import json
 import logging
-import threading
 from pathlib import Path
 
 
@@ -156,17 +155,6 @@ class PerformanceMetric:
 class DatabaseManager:
     """Thread-safe database manager for EDGAR filing metadata."""
     
-    _instance = None
-    _lock = threading.Lock()
-    
-    def __new__(cls, *args, **kwargs):
-        """Singleton pattern for database manager."""
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-        return cls._instance
-    
     def __init__(self, db_path: str = "edgar_filings.db", logger: Optional[logging.Logger] = None):
         """Initialize database manager.
         
@@ -174,38 +162,33 @@ class DatabaseManager:
             db_path: Path to SQLite database file
             logger: Optional logger instance
         """
-        if hasattr(self, '_initialized'):
-            return
-            
         self.db_path = Path(db_path)
         self.logger = logger or logging.getLogger(__name__)
-        self._connection_pool = threading.local()
-        self._initialized = True
         
         # Create database tables
         self._create_tables()
     
     @contextmanager
     def get_connection(self):
-        """Get thread-local database connection."""
-        if not hasattr(self._connection_pool, 'connection'):
-            self._connection_pool.connection = sqlite3.connect(
-                str(self.db_path),
-                check_same_thread=False,
-                timeout=30.0
-            )
-            self._connection_pool.connection.row_factory = sqlite3.Row
-            # Enable WAL mode for better concurrency
-            self._connection_pool.connection.execute("PRAGMA journal_mode=WAL")
-            self._connection_pool.connection.execute("PRAGMA synchronous=NORMAL")
-            self._connection_pool.connection.execute("PRAGMA cache_size=-64000")  # 64MB cache
-            
+        """Get a database connection and release it after use."""
+        connection = sqlite3.connect(
+            str(self.db_path),
+            check_same_thread=False,
+            timeout=30.0,
+        )
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=NORMAL")
+        connection.execute("PRAGMA cache_size=-64000")  # 64MB cache
+
         try:
-            yield self._connection_pool.connection
+            yield connection
         except Exception as e:
-            self._connection_pool.connection.rollback()
+            connection.rollback()
             self.logger.error(f"Database operation failed: {e}")
             raise
+        finally:
+            connection.close()
     
     def _create_tables(self):
         """Create database tables if they don't exist."""

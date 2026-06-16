@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import random
 import uuid
 from decimal import Decimal
 from typing import Dict, List, Optional
@@ -51,7 +52,7 @@ class FilingFactory(factory.Factory):
         model = dict
     
     id = factory.LazyFunction(lambda: str(uuid.uuid4()))
-    cik = factory.LazyAttribute(lambda obj: CompanyFactory().cik)
+    cik = factory.LazyAttribute(lambda obj: CompanyFactory()["cik"])
     accession_number = factory.Sequence(
         lambda n: f"0000320193-23-{str(n).zfill(6)}"
     )
@@ -123,7 +124,7 @@ class ProcessingJobFactory(factory.Factory):
     status = factory.Faker("random_element", elements=[
         "pending", "running", "completed", "failed", "cancelled"
     ])
-    target_cik = factory.LazyAttribute(lambda obj: CompanyFactory().cik)
+    target_cik = factory.LazyAttribute(lambda obj: CompanyFactory()["cik"])
     target_filing_id = factory.LazyFunction(lambda: str(uuid.uuid4()))
     priority = factory.Faker("random_element", elements=["low", "medium", "high", "urgent"])
     retry_count = factory.Faker("random_int", min=0, max=3)
@@ -153,7 +154,7 @@ class EtlRunFactory(factory.Factory):
         "pending", "running", "completed", "failed", "cancelled"
     ])
     target_ciks = factory.LazyFunction(lambda: [
-        CompanyFactory().cik for _ in range(factory.Faker("random_int", min=1, max=10).generate()
+        CompanyFactory()["cik"] for _ in range(random.randint(1, 10)
     )])
     form_types = factory.LazyFunction(lambda: ["10-K", "10-Q", "8-K"])
     started_at = factory.Faker("date_time_this_month")

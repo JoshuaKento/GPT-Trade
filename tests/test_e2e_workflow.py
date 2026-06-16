@@ -77,11 +77,15 @@ class E2EWorkflowOrchestrator:
         filing_ids = []
         
         for filing_data in filings:
+            filing_date = filing_data.get("filing_date")
+            if isinstance(filing_date, str):
+                filing_date = date.fromisoformat(filing_date)
+
             filing = FilingFactory(
                 cik=cik,
                 accession_number=filing_data["accession"],
                 form_type=filing_data["form"],
-                filing_date=filing_data.get("filing_date"),
+                filing_date=filing_date,
                 processing_status="discovered"
             )
             
@@ -241,6 +245,13 @@ class FullStackETLPipeline:
                     
                     filing_ids = self.orchestrator.record_filing_discovery(cik, discovered)
                     all_discovered_filings.extend(discovered)
+                else:
+                    missing_data_job_id = self.orchestrator.create_processing_job(
+                        "filing_discovery", target_cik=cik
+                    )
+                    self.orchestrator.update_processing_job(
+                        missing_data_job_id, "failed", "Company submissions not found"
+                    )
             
             self.orchestrator.update_processing_job(discovery_job_id, "completed")
             
@@ -279,22 +290,23 @@ class FullStackETLPipeline:
                             index_key = f"{cik}_{accession}"
                             if index_key in self.edgar_api.filing_index_data:
                                 # Mock documents for this filing
-                                documents = [
-                                    {
-                                        "filename": f"doc_{i}.htm",
-                                        "size": 1000 + i * 500,
-                                        "s3_key": f"filings/{cik}/{accession}/doc_{i}.htm"
-                                    }
-                                    for i in range(3)
-                                ]
+                                documents = []
+                                for i in range(3):
+                                    filename = f"doc_{i}.htm"
+                                    content = f"Document content for {filename}".encode()
+                                    documents.append({
+                                        "filename": filename,
+                                        "size": len(content),
+                                        "s3_key": f"filings/{cik}/{accession}/{filename}",
+                                        "content": content
+                                    })
                                 
                                 # Upload to S3 (simulate)
                                 for doc in documents:
-                                    content = f"Document content for {doc['filename']}".encode()
                                     self.orchestrator.s3_client.put_object(
                                         Bucket=self.orchestrator.bucket_name,
                                         Key=doc["s3_key"],
-                                        Body=content
+                                        Body=doc["content"]
                                     )
                                 
                                 self.orchestrator.record_filing_processing(filing_id, documents, True)

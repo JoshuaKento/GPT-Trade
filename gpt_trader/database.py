@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from typing import Optional, Generator
 from urllib.parse import urlparse
 
-from sqlalchemy import create_engine, event, MetaData
+from sqlalchemy import create_engine, event, MetaData, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool, StaticPool
@@ -221,7 +221,7 @@ class DatabaseManager:
         try:
             with self.session_scope() as session:
                 # Simple query to test connection
-                session.execute("SELECT 1")
+                session.execute(text("SELECT 1"))
             logger.debug("Database health check passed")
             return True
         except Exception as e:

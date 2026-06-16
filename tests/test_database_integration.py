@@ -2,6 +2,7 @@
 
 import asyncio
 import datetime
+import json
 import os
 import tempfile
 import time
@@ -186,16 +187,26 @@ class DatabaseTestContainer:
     def execute_sql(self, sql: str, params: Optional[Dict] = None):
         """Execute SQL query."""
         with self.engine.connect() as conn:
-            return conn.execute(text(sql), params or {})
+            result = conn.execute(text(sql), self._serialize_params(params or {}))
+            conn.commit()
+            return result
     
     def insert_test_data(self, table: str, data: Dict[str, Any]):
         """Insert test data into table."""
         with self.engine.connect() as conn:
+            serialized = self._serialize_params(data)
             columns = ", ".join(data.keys())
             placeholders = ", ".join(f":{k}" for k in data.keys())
             sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
-            conn.execute(text(sql), data)
+            conn.execute(text(sql), serialized)
             conn.commit()
+
+    def _serialize_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert structured values to SQLite-friendly parameters."""
+        return {
+            key: json.dumps(value) if isinstance(value, (dict, list)) else value
+            for key, value in params.items()
+        }
     
     def cleanup_table(self, table: str):
         """Clean up table data."""

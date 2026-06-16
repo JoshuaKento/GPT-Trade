@@ -174,16 +174,21 @@ class MockETLPipeline:
             
             # Parse documents from index (simplified)
             documents = []
-            for filename in ["primary.htm", "exhibit1.htm", "exhibit2.htm"]:
+            doc_prefix = f"{cik}_{accession}_"
+            filenames = [
+                key.removeprefix(doc_prefix)
+                for key in self.edgar_api.document_data
+                if key.startswith(doc_prefix)
+            ]
+            for filename in filenames:
                 doc_key = f"{cik}_{accession}_{filename}"
-                if doc_key in self.edgar_api.document_data:
-                    doc_info = {
-                        "filename": filename,
-                        "size": len(self.edgar_api.document_data[doc_key]),
-                        "content": self.edgar_api.document_data[doc_key]
-                    }
-                    documents.append(doc_info)
-                    self.downloaded_documents.append(doc_info)
+                doc_info = {
+                    "filename": filename,
+                    "size": len(self.edgar_api.document_data[doc_key]),
+                    "content": self.edgar_api.document_data[doc_key]
+                }
+                documents.append(doc_info)
+                self.downloaded_documents.append(doc_info)
             
             return {
                 "cik": cik,
@@ -246,6 +251,7 @@ class MockETLPipeline:
         download_tasks = [
             self.download_filing(filing["cik"], filing["accession"])
             for filing in discovered_filings
+            if f"{filing['cik']}_{filing['accession']}" in self.edgar_api.filing_index_data
         ]
         download_results = await asyncio.gather(*download_tasks, return_exceptions=True)
         
@@ -578,16 +584,21 @@ class TestETLPipelinePerformance:
 
 
 @pytest.mark.integration
-@mock_s3
 class TestETLPipelineWithS3:
     """Test ETL pipeline integration with S3 storage."""
     
-    def setup_method(self):
+    def setup_method(self, method=None):
         """Set up S3 mock environment."""
+        self.mock_s3 = mock_s3()
+        self.mock_s3.start()
         # Create mock S3 bucket
         self.s3_client = boto3.client("s3", region_name="us-east-1")
         self.bucket_name = "test-edgar-filings"
         self.s3_client.create_bucket(Bucket=self.bucket_name)
+
+    def teardown_method(self, method=None):
+        """Tear down S3 mock environment."""
+        self.mock_s3.stop()
     
     @pytest.mark.asyncio
     async def test_pipeline_with_s3_storage(self, mock_etl_pipeline):
@@ -793,6 +804,11 @@ class TestETLPipelineMonitoring:
                 }
             }
         })
+        mock_etl_pipeline.edgar_api.add_filing_index(
+            "0000999999",
+            "0000999999-23-000999",
+            "<html><table class='tableFile'></table></html>",
+        )
         
         ciks = ["0000320193", "0000999999"]
         form_types = ["10-K"]
